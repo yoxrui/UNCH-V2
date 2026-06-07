@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(bun run build 2>&1)",
+      "PowerShell(bun add -d @types/node 2>&1)",
+      "Bash(cd \"c:/dev/dashboardsvdemo\")",
+      "Bash(ls static/)",
+      "Bash(ls -la .vscode/)",
+      "Bash(ls src/lib/hooks/)",
+      "Bash(ls *.txt *.md)"
+    ]
+  }
+}
