@@ -3,7 +3,7 @@
 	import { getEmblaContext } from "./context.js";
 	import { cn } from "$lib/utils.js";
 	import { Button, type Props } from "$lib/components/ui/button/index.js";
-	import RiArrowLeftSLine from 'remixicon-svelte/icons/arrow-left-s-line';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
 
 	let {
 		ref = $bindable(null),
@@ -25,8 +25,8 @@
 	class={cn(
 		"rounded-full absolute touch-manipulation",
 		emblaCtx.orientation === "horizontal"
-			? "-start-12 top-1/2 -translate-y-1/2"
-			: "start-1/2 -top-12 -translate-x-1/2 rotate-90",
+			? "-inset-s-12 top-1/2 -translate-y-1/2"
+			: "inset-s-1/2 -top-12 -translate-x-1/2 rotate-90",
 		className
 	)}
 	onclick={emblaCtx.scrollPrev}
@@ -34,6 +34,6 @@
 	{...restProps}
 	bind:ref
 >
-	<RiArrowLeftSLine  />
+	<ChevronLeftIcon  />
 	<span class="sr-only">Previous slide</span>
 </Button>

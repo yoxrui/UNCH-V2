@@ -2,7 +2,7 @@
 	import { Pagination as PaginationPrimitive } from "bits-ui";
 	import { cn } from "$lib/utils.js";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
-	import RiArrowLeftSLine from 'remixicon-svelte/icons/arrow-left-s-line';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
 
 	let {
 		ref = $bindable(null),
@@ -16,11 +16,11 @@
 	aria-label="Go to previous page"
 	class={cn(
 		buttonVariants({ variant: "ghost", size: "default" }),
-		"pl-2!",
+		"pl-1.5!",
 		className
 	)}
 	{...restProps}
 >
-	<RiArrowLeftSLine data-icon="inline-start" />
+	<ChevronLeftIcon data-icon="inline-start" />
 	<span class="cn-pagination-previous-text hidden sm:block">Previous</span>
 </PaginationPrimitive.PrevButton>

@@ -3,7 +3,7 @@
 	import { getEmblaContext } from "./context.js";
 	import { cn } from "$lib/utils.js";
 	import { Button, type Props } from "$lib/components/ui/button/index.js";
-	import RiArrowRightSLine from 'remixicon-svelte/icons/arrow-right-s-line';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
 	let {
 		ref = $bindable(null),
@@ -34,6 +34,6 @@
 	bind:ref
 	{...restProps}
 >
-	<RiArrowRightSLine  />
+	<ChevronRightIcon  />
 	<span class="sr-only">Next slide</span>
 </Button>
