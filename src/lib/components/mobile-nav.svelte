@@ -11,7 +11,7 @@
     RiTrophyFill,
     RiTeamLine,
     RiTeamFill,
-  } from "remixicon-svelte";
+  } from "$lib/icons.js";
 
   const path = $derived(page.url.pathname);
   const isHome = $derived(path === "/");

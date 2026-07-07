@@ -7,4 +7,30 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
   ],
+  ssr: {
+    noExternal: [/remixicon-svelte/],
+  },
+  optimizeDeps: {
+    include: [
+      'bits-ui',
+      'layerchart',
+      'embla-carousel-svelte',
+      'wavesurfer.js',
+      'vaul-svelte',
+      'paneforge',
+      'formsnap',
+      'svelte-sonner',
+      'mode-watcher',
+      '@lucide/svelte',
+    ],
+  },
+  server: {
+    warmup: {
+      ssrFiles: [
+        './src/routes/**/+page.svelte',
+        './src/routes/**/+layout.svelte',
+        './src/lib/components/**/*.svelte',
+      ],
+    },
+  },
 });

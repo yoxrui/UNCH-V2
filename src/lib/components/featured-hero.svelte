@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { Chart } from "$lib/data/index.js";
-  import { difficultyFromTags, compact } from "$lib/data/index.js";
+  import { difficultyFromTags, compact, coverUrl, backgroundUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import DifficultyBadge from "./difficulty-badge.svelte";
+  import FormattedText from "./formatted-text.svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Carousel from "$lib/components/ui/carousel/index.js";
   import type { CarouselAPI } from "$lib/components/ui/carousel/context.js";
@@ -15,13 +16,15 @@
     RiStarFill,
     RiArrowLeftSLine,
     RiArrowRightSLine,
-  } from "remixicon-svelte";
+  } from "$lib/icons.js";
 
   let { charts }: { charts: Chart[] } = $props();
 
   let api = $state<CarouselAPI>();
   let selected = $state(0);
   let paused = $state(false);
+
+  const heroBg = $derived(charts[selected] ? backgroundUrl(charts[selected]) : null);
 
   // Sliding active-dot indicator (osu-like). Spring drives the horizontal pos.
   const DOT_STEP = 14; // dot (6px) + gap (8px)
@@ -60,6 +63,12 @@
   aria-label="Featured staff picks"
 >
   <div class="bg-featured text-featured-foreground relative w-full max-w-5xl overflow-hidden rounded-3xl">
+    <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {#if heroBg}
+        <img src={heroBg} alt="" class="size-full scale-110 object-cover opacity-25 blur-2xl" />
+      {/if}
+      <div class="from-featured/80 via-featured/60 to-featured/90 absolute inset-0 bg-linear-to-t"></div>
+    </div>
     <Carousel.Root setApi={(a) => (api = a)} opts={{ loop: true }} class="w-full">
       <Carousel.Content class="ms-0">
         {#each charts as current (current.id)}
@@ -68,13 +77,14 @@
             <div class="flex flex-col gap-6 p-4 sm:flex-row sm:items-stretch sm:gap-8 sm:p-6">
               <!-- Artwork -->
               <a
-                href={`/levels/${current.id}`}
+                href={`/levels/UnCh-${current.id}`}
                 class="ring-background/10 group relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl ring-1 sm:aspect-square sm:size-60 md:size-64"
                 aria-label={`Open ${current.title}`}
               >
                 <CoverArt
                   id={current.id}
                   title={current.title}
+                  src={coverUrl(current)}
                   rounded="rounded-2xl"
                   class="size-full transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
                 />
@@ -93,15 +103,15 @@
 
                 <div class="min-w-0 space-y-1.5">
                   <h2 class="font-heading truncate text-2xl font-bold tracking-tight sm:text-3xl">
-                    {current.title}
+                    <FormattedText text={current.title} />
                   </h2>
                   <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                    <span class="text-featured-foreground/70 truncate">{current.artists}</span>
+                    <span class="text-featured-foreground/70 truncate"><FormattedText text={current.artists} /></span>
                     <span class="bg-featured-foreground/30 size-1 rounded-full"></span>
                     <span class="text-featured-foreground/70">
                       by
                       <a
-                        href={`/creators/${current.author}`}
+                        href={`/creators/${current.author_handle}`}
                         class="font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
                         >{current.chart_design}</a
                       >
@@ -111,7 +121,7 @@
 
                 {#if current.description}
                   <p class="text-featured-foreground/70 hidden max-w-2xl text-sm leading-relaxed sm:line-clamp-2 sm:block">
-                    {current.description}
+                    <FormattedText text={current.description} />
                   </p>
                 {/if}
 
@@ -126,7 +136,7 @@
                 {/if}
 
                 <div class="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
-                  <Button href={`/levels/${current.id}`} class="rounded-full">
+                  <Button href={`/levels/UnCh-${current.id}`} class="rounded-full">
                     View details
                     <RiArrowRightLine class="size-4" />
                   </Button>

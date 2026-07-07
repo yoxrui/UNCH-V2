@@ -3,9 +3,10 @@
   import SiteFooter from "$lib/components/site-footer.svelte";
   import CoverArt from "$lib/components/cover-art.svelte";
   import ChartCard from "$lib/components/chart-card.svelte";
+  import FormattedText from "$lib/components/formatted-text.svelte";
   import { cn } from "$lib/utils.js";
-  import { compact, bannerGradient } from "$lib/data/index.js";
-  import { RiArrowLeftLine, RiHeart3Fill, RiStackLine, RiStarFill } from "remixicon-svelte";
+  import { compact, bannerGradient, profileUrl, bannerUrl } from "$lib/data/index.js";
+  import { RiArrowLeftLine, RiHeart3Fill, RiStackLine, RiStarFill } from "$lib/icons.js";
 
   let { data } = $props();
   const account = $derived(data.account);
@@ -31,17 +32,33 @@
 
   <!-- Profile header -->
   <section class="bg-card overflow-hidden rounded-3xl border">
-    <div class={cn("h-28 bg-linear-to-br sm:h-32", bannerGradient(account.sonolus_id))}></div>
-    <div class="-mt-12 flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-end sm:px-6">
+    <div class="relative">
+      {#if bannerUrl(account)}
+        <div
+          class="h-28 bg-cover bg-center sm:h-32"
+          style="background-image: url({bannerUrl(account)})"
+        ></div>
+      {:else}
+        <div class={cn("h-28 bg-linear-to-br sm:h-32", bannerGradient(account.sonolus_id))}></div>
+      {/if}
+      <div
+        class="pointer-events-none absolute inset-x-0 bottom-0 h-12 backdrop-blur-md"
+        style="mask-image: linear-gradient(to top, black, transparent); -webkit-mask-image: linear-gradient(to top, black, transparent);"
+      ></div>
+    </div>
+    <div class="relative z-10 -mt-12 flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-end sm:px-6">
       <CoverArt
         id={account.sonolus_id}
         title={account.sonolus_username}
+        src={profileUrl(account)}
         rounded="rounded-2xl"
         class="ring-card size-24 text-3xl ring-4"
       />
       <div class="flex min-w-0 flex-1 flex-col gap-2 pb-1 sm:pb-2">
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="font-heading text-2xl font-bold tracking-tight">{account.sonolus_username}</h1>
+          <h1 class="font-heading text-2xl font-bold tracking-tight">
+            <FormattedText text={account.sonolus_username} />
+          </h1>
           <span class="text-muted-foreground/70 text-sm tabular-nums">#{account.sonolus_handle}</span>
           {#if account.admin}
             <span
@@ -57,7 +74,7 @@
         </div>
         {#if account.description}
           <p class="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-            {account.description}
+            <FormattedText text={account.description} />
           </p>
         {/if}
         <div class="text-muted-foreground flex items-center gap-4 text-sm tabular-nums">

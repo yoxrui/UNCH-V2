@@ -2,14 +2,11 @@
   import * as Drawer from "$lib/components/ui/drawer/index.js";
   import { cn } from "$lib/utils.js";
   import {
-    DIFFICULTIES,
-    difficultyMeta,
-    sortOptions,
-    levelRanges,
-    defaultFilters,
+    searchTypes,
+    sortByOptions,
+    orderOptions,
     activeFilterCount,
     type Filters,
-    type Difficulty,
   } from "$lib/data/index.js";
   import {
     RiSearchLine,
@@ -18,7 +15,7 @@
     RiArrowUpDownLine,
     RiCheckLine,
     RiStarFill,
-  } from "remixicon-svelte";
+  } from "$lib/icons.js";
 
   let {
     filters = $bindable(),
@@ -31,18 +28,22 @@
   let input = $state<HTMLInputElement | null>(null);
 
   const activeCount = $derived(activeFilterCount(filters));
-  const sortLabel = $derived(sortOptions.find((o) => o.key === filters.sort)?.label ?? "Trending");
+  const sortLabel = $derived(sortByOptions.find((o) => o.value === filters.sortBy)?.label ?? "Decaying Likes");
+  const showSort = $derived(filters.searchType !== "random" && filters.searchType !== "newest");
+  const isAdvanced = $derived(filters.searchType === "advanced");
 
-  function toggleDifficulty(d: Difficulty) {
-    filters.difficulties = filters.difficulties.includes(d)
-      ? filters.difficulties.filter((x) => x !== d)
-      : [...filters.difficulties, d];
-  }
+  const inputClass =
+    "bg-card focus-visible:ring-ring/50 h-11 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2";
 
   function resetFilters() {
-    filters.difficulties = [];
-    filters.range = "any";
-    filters.staffOnly = false;
+    filters.staffPick = false;
+    filters.minRating = "";
+    filters.maxRating = "";
+    filters.titleIncludes = "";
+    filters.descriptionIncludes = "";
+    filters.artistsIncludes = "";
+    filters.tags = "";
+    filters.authorHandle = "";
   }
 
   $effect(() => {
@@ -60,7 +61,7 @@
     />
     <input
       bind:this={input}
-      bind:value={filters.q}
+      bind:value={filters.keywords}
       type="search"
       inputmode="search"
       enterkeyhint="search"
@@ -68,10 +69,10 @@
       aria-label="Search charts"
       class="bg-card focus-visible:ring-ring/50 h-12 w-full rounded-2xl border pr-11 pl-11 text-[15px] shadow-sm outline-none focus-visible:ring-2"
     />
-    {#if filters.q}
+    {#if filters.keywords}
       <button
         type="button"
-        onclick={() => (filters.q = "")}
+        onclick={() => (filters.keywords = "")}
         aria-label="Clear search"
         class="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-full"
       >
@@ -95,9 +96,7 @@
       onclick={() => (filtersOpen = true)}
       class={cn(
         "inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-medium",
-        activeCount > 0
-          ? "border-primary/40 bg-primary/10 text-primary"
-          : "bg-card",
+        activeCount > 0 ? "border-primary/40 bg-primary/10 text-primary" : "bg-card",
       )}
     >
       <RiEqualizerLine class="size-4" />
@@ -110,52 +109,74 @@
       {/if}
     </button>
   </div>
-
-  <!-- Quick difficulty chips (horizontally scrollable) -->
-  <div class="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5 sm:-mx-6 sm:px-6 [scrollbar-width:none]">
-    {#each DIFFICULTIES as d (d)}
-      {@const active = filters.difficulties.includes(d)}
-      {@const meta = difficultyMeta[d]}
-      <button
-        type="button"
-        onclick={() => toggleDifficulty(d)}
-        aria-pressed={active}
-        class={cn(
-          "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-          active ? meta.badge : "border-border text-muted-foreground",
-        )}
-      >
-        <span class={cn("size-1.5 rounded-full", active ? meta.dot : "bg-muted-foreground/50")}></span>
-        {d}
-      </button>
-    {/each}
-  </div>
 </div>
 
-<!-- Sort bottom sheet -->
+<!-- Sort + type bottom sheet -->
 <Drawer.Root bind:open={sortOpen}>
   <Drawer.Content class="pb-[env(safe-area-inset-bottom)]">
     <Drawer.Header class="text-left">
-      <Drawer.Title>Sort by</Drawer.Title>
+      <Drawer.Title>Sort & type</Drawer.Title>
     </Drawer.Header>
-    <div class="max-h-[60vh] space-y-1 overflow-y-auto px-3 pb-6">
-      {#each sortOptions as o (o.key)}
-        {@const active = filters.sort === o.key}
-        <button
-          type="button"
-          onclick={() => {
-            filters.sort = o.key;
-            sortOpen = false;
-          }}
-          class={cn(
-            "flex h-12 w-full items-center justify-between rounded-xl px-4 text-[15px] transition-colors",
-            active ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted",
-          )}
-        >
-          {o.label}
-          {#if active}<RiCheckLine class="size-5" />{/if}
-        </button>
-      {/each}
+    <div class="max-h-[65vh] space-y-5 overflow-y-auto px-4 pb-6">
+      <section class="space-y-2">
+        <h3 class="text-muted-foreground text-xs font-semibold">Search type</h3>
+        <div class="flex flex-wrap gap-2">
+          {#each searchTypes as o (o.value)}
+            {@const active = filters.searchType === o.value}
+            <button
+              type="button"
+              onclick={() => (filters.searchType = o.value)}
+              aria-pressed={active}
+              class={cn(
+                "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
+                active ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground",
+              )}
+            >
+              {o.label}
+            </button>
+          {/each}
+        </div>
+      </section>
+
+      {#if showSort}
+        <section class="space-y-1">
+          <h3 class="text-muted-foreground text-xs font-semibold">Sort by</h3>
+          {#each sortByOptions as o (o.value)}
+            {@const active = filters.sortBy === o.value}
+            <button
+              type="button"
+              onclick={() => (filters.sortBy = o.value)}
+              class={cn(
+                "flex h-11 w-full items-center justify-between rounded-xl px-4 text-[15px] transition-colors",
+                active ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted",
+              )}
+            >
+              {o.label}
+              {#if active}<RiCheckLine class="size-5" />{/if}
+            </button>
+          {/each}
+        </section>
+
+        <section class="space-y-2">
+          <h3 class="text-muted-foreground text-xs font-semibold">Order</h3>
+          <div class="flex gap-2">
+            {#each orderOptions as o (o.value)}
+              {@const active = filters.sortOrder === o.value}
+              <button
+                type="button"
+                onclick={() => (filters.sortOrder = o.value)}
+                aria-pressed={active}
+                class={cn(
+                  "flex-1 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors",
+                  active ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground",
+                )}
+              >
+                {o.label}
+              </button>
+            {/each}
+          </div>
+        </section>
+      {/if}
     </div>
   </Drawer.Content>
 </Drawer.Root>
@@ -166,76 +187,59 @@
     <Drawer.Header class="flex-row items-center justify-between text-left">
       <Drawer.Title>Filters</Drawer.Title>
       {#if activeCount > 0}
-        <button type="button" onclick={resetFilters} class="text-primary text-sm font-medium">
-          Reset
-        </button>
+        <button type="button" onclick={resetFilters} class="text-primary text-sm font-medium">Reset</button>
       {/if}
     </Drawer.Header>
 
-    <div class="max-h-[65vh] space-y-6 overflow-y-auto px-4 pt-1 pb-4">
-      <!-- Difficulty -->
-      <section class="space-y-2.5">
-        <h3 class="text-sm font-semibold">Difficulty</h3>
-        <div class="flex flex-wrap gap-2">
-          {#each DIFFICULTIES as d (d)}
-            {@const active = filters.difficulties.includes(d)}
-            {@const meta = difficultyMeta[d]}
-            <button
-              type="button"
-              onclick={() => toggleDifficulty(d)}
-              aria-pressed={active}
-              class={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors",
-                active ? meta.badge : "border-border text-muted-foreground",
-              )}
-            >
-              <span class={cn("size-1.5 rounded-full", active ? meta.dot : "bg-muted-foreground/50")}></span>
-              {d}
-            </button>
-          {/each}
-        </div>
-      </section>
-
-      <!-- Level range -->
-      <section class="space-y-2.5">
-        <h3 class="text-sm font-semibold">Level</h3>
-        <div class="flex flex-wrap gap-2">
-          {#each levelRanges as r (r.value)}
-            {@const active = filters.range === r.value}
-            <button
-              type="button"
-              onclick={() => (filters.range = r.value)}
-              aria-pressed={active}
-              class={cn(
-                "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "border-primary/50 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground",
-              )}
-            >
-              {r.label}
-            </button>
-          {/each}
-        </div>
-      </section>
-
-      <!-- Staff -->
-      <section class="space-y-2.5">
-        <h3 class="text-sm font-semibold">Collection</h3>
+    <div class="max-h-[65vh] space-y-4 overflow-y-auto px-4 pt-1 pb-4">
+      {#if filters.searchType !== "random"}
         <button
           type="button"
-          onclick={() => (filters.staffOnly = !filters.staffOnly)}
-          aria-pressed={filters.staffOnly}
+          onclick={() => (filters.staffPick = !filters.staffPick)}
+          aria-pressed={filters.staffPick}
           class={cn(
             "inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors",
-            filters.staffOnly
+            filters.staffPick
               ? "border-amber-400/40 bg-amber-400/15 text-amber-600 dark:text-amber-300"
               : "border-border text-muted-foreground",
           )}
         >
           <RiStarFill class="size-4" /> Staff picks only
         </button>
-      </section>
+      {/if}
+
+      {#if isAdvanced}
+        <div class="grid grid-cols-2 gap-3">
+          <label class="space-y-1">
+            <span class="text-muted-foreground text-xs">Min rating</span>
+            <input type="number" min="1" max="99" placeholder="25" bind:value={filters.minRating} class={inputClass} />
+          </label>
+          <label class="space-y-1">
+            <span class="text-muted-foreground text-xs">Max rating</span>
+            <input type="number" min="1" max="99" placeholder="32" bind:value={filters.maxRating} class={inputClass} />
+          </label>
+        </div>
+        <label class="block space-y-1">
+          <span class="text-muted-foreground text-xs">Author handle</span>
+          <input type="text" placeholder="e.g. 78302" bind:value={filters.authorHandle} class={inputClass} />
+        </label>
+        <label class="block space-y-1">
+          <span class="text-muted-foreground text-xs">Title includes</span>
+          <input type="text" placeholder="Search in titles…" bind:value={filters.titleIncludes} class={inputClass} />
+        </label>
+        <label class="block space-y-1">
+          <span class="text-muted-foreground text-xs">Artists includes</span>
+          <input type="text" placeholder="Search in artists…" bind:value={filters.artistsIncludes} class={inputClass} />
+        </label>
+        <label class="block space-y-1">
+          <span class="text-muted-foreground text-xs">Description includes</span>
+          <input type="text" placeholder="Search in descriptions…" bind:value={filters.descriptionIncludes} class={inputClass} />
+        </label>
+        <label class="block space-y-1">
+          <span class="text-muted-foreground text-xs">Tags</span>
+          <input type="text" placeholder="Comma-separated tags" bind:value={filters.tags} class={inputClass} />
+        </label>
+      {/if}
     </div>
 
     <Drawer.Footer class="pt-2">

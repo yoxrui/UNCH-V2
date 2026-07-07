@@ -3,7 +3,7 @@
   import SiteHeader from "$lib/components/site-header.svelte";
   import SiteFooter from "$lib/components/site-footer.svelte";
   import { Button } from "$lib/components/ui/button/index.js";
-  import { RiCompass3Line, RiHome5Line } from "remixicon-svelte";
+  import { RiCompass3Line, RiHome5Line } from "$lib/icons.js";
 
   const isNotFound = $derived(page.status === 404);
 </script>

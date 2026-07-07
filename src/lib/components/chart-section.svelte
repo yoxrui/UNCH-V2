@@ -3,7 +3,7 @@
   import ChartCard from "./chart-card.svelte";
   import * as Carousel from "$lib/components/ui/carousel/index.js";
   import { cn } from "$lib/utils.js";
-  import { RiArrowRightLine } from "remixicon-svelte";
+  import { RiArrowRightLine } from "$lib/icons.js";
 
   let {
     title,

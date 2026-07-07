@@ -2,96 +2,112 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import { cn } from "$lib/utils.js";
   import {
-    DIFFICULTIES,
-    difficultyMeta,
-    sortOptions,
-    levelRanges,
+    searchTypes,
+    sortByOptions,
+    orderOptions,
     type Filters,
-    type Difficulty,
   } from "$lib/data/index.js";
-  import { RiStarFill, RiEqualizerLine } from "remixicon-svelte";
+  import { RiStarFill, RiEqualizerLine } from "$lib/icons.js";
 
   let { filters = $bindable() }: { filters: Filters } = $props();
 
-  const sortLabel = $derived(
-    sortOptions.find((o) => o.key === filters.sort)?.label ?? "Trending",
-  );
-  const rangeLabel = $derived(
-    levelRanges.find((r) => r.value === filters.range)?.label ?? "Any level",
-  );
+  const typeLabel = $derived(searchTypes.find((o) => o.value === filters.searchType)?.label ?? "Quick");
+  const sortLabel = $derived(sortByOptions.find((o) => o.value === filters.sortBy)?.label ?? "Decaying Likes");
+  const orderLabel = $derived(orderOptions.find((o) => o.value === filters.sortOrder)?.label ?? "Descending");
 
-  function toggleDifficulty(d: Difficulty) {
-    filters.difficulties = filters.difficulties.includes(d)
-      ? filters.difficulties.filter((x) => x !== d)
-      : [...filters.difficulties, d];
-  }
+  const showSort = $derived(filters.searchType !== "random" && filters.searchType !== "newest");
+  const isAdvanced = $derived(filters.searchType === "advanced");
+
+  const inputClass =
+    "bg-card focus-visible:ring-ring/50 h-10 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2";
 </script>
 
 <div
   class="bg-card/60 supports-backdrop-filter:bg-card/40 space-y-3 rounded-2xl border p-3 backdrop-blur-xl sm:p-4"
 >
-  <!-- Difficulty chips + staff toggle -->
-  <div class="flex flex-wrap items-center gap-1.5">
-    <RiEqualizerLine class="text-muted-foreground mr-0.5 size-4" />
-    {#each DIFFICULTIES as d (d)}
-      {@const active = filters.difficulties.includes(d)}
-      {@const meta = difficultyMeta[d]}
+  <div class="flex flex-wrap items-center gap-2.5">
+    <RiEqualizerLine class="text-muted-foreground size-4" />
+
+    <Select.Root type="single" bind:value={filters.searchType}>
+      <Select.Trigger class="h-10 rounded-xl sm:w-40" aria-label="Search type">
+        <span class="text-muted-foreground mr-1 text-xs">Type</span>{typeLabel}
+      </Select.Trigger>
+      <Select.Content>
+        {#each searchTypes as o (o.value)}
+          <Select.Item value={o.value} label={o.label}>{o.label}</Select.Item>
+        {/each}
+      </Select.Content>
+    </Select.Root>
+
+    {#if showSort}
+      <Select.Root type="single" bind:value={filters.sortBy}>
+        <Select.Trigger class="h-10 rounded-xl sm:w-48" aria-label="Sort by">
+          <span class="text-muted-foreground mr-1 text-xs">Sort</span>{sortLabel}
+        </Select.Trigger>
+        <Select.Content>
+          {#each sortByOptions as o (o.value)}
+            <Select.Item value={o.value} label={o.label}>{o.label}</Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
+
+      <Select.Root type="single" bind:value={filters.sortOrder}>
+        <Select.Trigger class="h-10 rounded-xl sm:w-40" aria-label="Order">
+          <span class="text-muted-foreground mr-1 text-xs">Order</span>{orderLabel}
+        </Select.Trigger>
+        <Select.Content>
+          {#each orderOptions as o (o.value)}
+            <Select.Item value={o.value} label={o.label}>{o.label}</Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
+
       <button
         type="button"
-        onclick={() => toggleDifficulty(d)}
-        aria-pressed={active}
+        onclick={() => (filters.staffPick = !filters.staffPick)}
+        aria-pressed={filters.staffPick}
         class={cn(
           "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
-          active
-            ? meta.badge
+          filters.staffPick
+            ? "border-amber-400/40 bg-amber-400/15 text-amber-600 dark:text-amber-300"
             : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30",
         )}
       >
-        <span class={cn("size-1.5 rounded-full", active ? meta.dot : "bg-muted-foreground/50")}
-        ></span>
-        {d}
+        <RiStarFill class="size-3" /> Staff picks
       </button>
-    {/each}
-
-    <span class="bg-border mx-1 hidden h-5 w-px sm:block"></span>
-
-    <button
-      type="button"
-      onclick={() => (filters.staffOnly = !filters.staffOnly)}
-      aria-pressed={filters.staffOnly}
-      class={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
-        filters.staffOnly
-          ? "border-amber-400/40 bg-amber-400/15 text-amber-600 dark:text-amber-300"
-          : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30",
-      )}
-    >
-      <RiStarFill class="size-3" /> Staff picks
-    </button>
+    {/if}
   </div>
 
-  <!-- Level range + sort -->
-  <div class="flex flex-col gap-2.5 sm:flex-row">
-    <Select.Root type="single" bind:value={filters.range}>
-      <Select.Trigger class="h-10 rounded-xl sm:w-44" aria-label="Level range">
-        <span class="text-muted-foreground mr-1 text-xs">Level</span>{rangeLabel}
-      </Select.Trigger>
-      <Select.Content>
-        {#each levelRanges as r (r.value)}
-          <Select.Item value={r.value} label={r.label}>{r.label}</Select.Item>
-        {/each}
-      </Select.Content>
-    </Select.Root>
-
-    <Select.Root type="single" bind:value={filters.sort}>
-      <Select.Trigger class="h-10 rounded-xl sm:w-56" aria-label="Sort by">
-        <span class="text-muted-foreground mr-1 text-xs">Sort</span>{sortLabel}
-      </Select.Trigger>
-      <Select.Content>
-        {#each sortOptions as o (o.key)}
-          <Select.Item value={o.key} label={o.label}>{o.label}</Select.Item>
-        {/each}
-      </Select.Content>
-    </Select.Root>
-  </div>
+  {#if isAdvanced}
+    <div class="grid gap-2.5 border-t pt-3 sm:grid-cols-2 lg:grid-cols-3">
+      <label class="space-y-1">
+        <span class="text-muted-foreground text-xs">Min rating</span>
+        <input type="number" min="1" max="99" placeholder="e.g. 25" bind:value={filters.minRating} class={inputClass} />
+      </label>
+      <label class="space-y-1">
+        <span class="text-muted-foreground text-xs">Max rating</span>
+        <input type="number" min="1" max="99" placeholder="e.g. 32" bind:value={filters.maxRating} class={inputClass} />
+      </label>
+      <label class="space-y-1">
+        <span class="text-muted-foreground text-xs">Author handle</span>
+        <input type="text" placeholder="e.g. 78302" bind:value={filters.authorHandle} class={inputClass} />
+      </label>
+      <label class="space-y-1">
+        <span class="text-muted-foreground text-xs">Title includes</span>
+        <input type="text" placeholder="Search in titles…" bind:value={filters.titleIncludes} class={inputClass} />
+      </label>
+      <label class="space-y-1">
+        <span class="text-muted-foreground text-xs">Artists includes</span>
+        <input type="text" placeholder="Search in artists…" bind:value={filters.artistsIncludes} class={inputClass} />
+      </label>
+      <label class="space-y-1">
+        <span class="text-muted-foreground text-xs">Description includes</span>
+        <input type="text" placeholder="Search in descriptions…" bind:value={filters.descriptionIncludes} class={inputClass} />
+      </label>
+      <label class="space-y-1 sm:col-span-2 lg:col-span-3">
+        <span class="text-muted-foreground text-xs">Tags</span>
+        <input type="text" placeholder="Comma-separated tags" bind:value={filters.tags} class={inputClass} />
+      </label>
+    </div>
+  {/if}
 </div>

@@ -1,29 +1,22 @@
 import { error } from "@sveltejs/kit";
-import {
-  getChart,
-  getTrends,
-  parseDescriptionMeta,
-  queryCharts,
-  difficultyFromTags,
-} from "$lib/data/index.js";
+import { fetchChart, fetchCharts, fetchTrends, parseDescriptionMeta } from "$lib/data/index.js";
 import type { PageLoad } from "./$types";
 
-export const load: PageLoad = ({ params }) => {
-  const chart = getChart(params.id);
+export const load: PageLoad = async ({ params, fetch }) => {
+  const id = params.id.replace(/^unch-/i, "");
+  const chart = await fetchChart(fetch, id);
   if (!chart) error(404, "That chart doesn't exist (or isn't public).");
 
-  // "Related" = same difficulty band, then topped up with shared-tag charts.
-  const difficulty = difficultyFromTags(chart.tags, chart.rating);
-  const sameDifficulty = queryCharts({ difficulties: [difficulty], limit: 24 }).data;
-  const sharedTags = queryCharts({ tags: chart.tags, limit: 24 }).data;
-  const related = [...sameDifficulty, ...sharedTags]
-    .filter((c, i, arr) => c.id !== chart.id && arr.findIndex((x) => x.id === c.id) === i)
-    .slice(0, 8);
+  const [relatedRes, trends] = await Promise.all([
+    fetchCharts(fetch, { type: "quick", sort_by: "decaying_likes", limit: 9 }),
+    fetchTrends(fetch, chart.id),
+  ]);
+  const related = relatedRes.data.filter((c) => c.id !== chart.id).slice(0, 8);
 
   return {
     chart,
     related,
-    trends: getTrends(chart.id),
+    trends,
     meta: parseDescriptionMeta(chart.description),
   };
 };

@@ -35,6 +35,8 @@ export type Chart = {
   published_at: string; // ISO
   updated_at: string; // ISO
   jacket_file_hash: string;
+  music_file_hash: string;
+  background_file_hash: string;
 };
 
 export type Comment = {
@@ -74,6 +76,13 @@ export type ScoreEntry = {
 };
 
 export type Trends = { likes: number[]; comments: number[] };
+
+export type CharterSummary = {
+  account: Account;
+  chartCount: number;
+  totalLikes: number;
+  staffPicks: number;
+};
 
 /** Accepted `sort_by` values on `GET /api/charts/` (verified against the API). */
 export const SORT_OPTIONS = [

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { RiGithubFill, RiDiscordFill } from "remixicon-svelte";
+  import { RiGithubFill, RiDiscordFill } from "$lib/icons.js";
 
   const groups = [
     {

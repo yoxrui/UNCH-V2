@@ -21,6 +21,5 @@
   )}
 >
   <span class={cn("badge-dot size-1.5 rounded-full", meta.dot)}></span>
-  {difficulty}{#if level !== undefined && level > 0}<span class="opacity-80">· Lv.{level}</span
-    >{/if}
+  Lv.{level ?? "?"}
 </span>

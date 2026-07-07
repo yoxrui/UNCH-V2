@@ -3,7 +3,7 @@
   import { cn } from "$lib/utils.js";
   import { page } from "$app/state";
   import { toggleMode } from "mode-watcher";
-  import { RiSunLine, RiMoonLine } from "remixicon-svelte";
+  import { RiSunLine, RiMoonLine } from "$lib/icons.js";
 
   const links = [
     { label: "Home", href: "/" },

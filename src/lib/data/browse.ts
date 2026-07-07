@@ -1,80 +1,109 @@
-/** UI constants + mapping for the Browse screen → `queryCharts` params. */
-import type { ChartQuery, SortBy } from "./types.js";
-import type { Difficulty } from "./format.js";
+import type { SortBy } from "./types.js";
 
-export type SortOption = { key: string; value: SortBy; order: "asc" | "desc"; label: string };
+export type SearchType = "newest" | "random" | "quick" | "advanced";
 
-/** Every option maps to a real `sort_by` + `sort_order` the API accepts. */
-export const sortOptions: SortOption[] = [
-  { key: "decaying_likes:desc", value: "decaying_likes", order: "desc", label: "Trending" },
-  { key: "created_at:desc", value: "created_at", order: "desc", label: "Newest" },
-  { key: "created_at:asc", value: "created_at", order: "asc", label: "Oldest" },
-  { key: "likes:desc", value: "likes", order: "desc", label: "Most liked" },
-  { key: "comments:desc", value: "comments", order: "desc", label: "Most discussed" },
-  { key: "rating:desc", value: "rating", order: "desc", label: "Level: high → low" },
-  { key: "rating:asc", value: "rating", order: "asc", label: "Level: low → high" },
-  { key: "abc:asc", value: "abc", order: "asc", label: "A → Z" },
-  { key: "random:desc", value: "random", order: "desc", label: "Random" },
+export const searchTypes: { value: SearchType; label: string }[] = [
+  { value: "newest", label: "Newest" },
+  { value: "quick", label: "Quick" },
+  { value: "advanced", label: "Advanced" },
+  { value: "random", label: "Random" },
 ];
 
-export type LevelRange = {
-  value: string;
-  label: string;
-  min_rating?: number;
-  max_rating?: number;
-};
+export const sortByOptions: { value: SortBy; label: string }[] = [
+  { value: "created_at", label: "Created Date" },
+  { value: "rating", label: "Rating" },
+  { value: "likes", label: "Likes" },
+  { value: "abc", label: "Alphabetical" },
+  { value: "decaying_likes", label: "Decaying Likes" },
+];
 
-export const levelRanges: LevelRange[] = [
-  { value: "any", label: "Any level" },
-  { value: "lte24", label: "Lv. 24 & under", max_rating: 24 },
-  { value: "25-29", label: "Lv. 25–29", min_rating: 25, max_rating: 29 },
-  { value: "30-32", label: "Lv. 30–32", min_rating: 30, max_rating: 32 },
-  { value: "33plus", label: "Lv. 33+", min_rating: 33 },
+export const orderOptions: { value: "asc" | "desc"; label: string }[] = [
+  { value: "desc", label: "Descending" },
+  { value: "asc", label: "Ascending" },
 ];
 
 export type Filters = {
-  q: string; // free-text search
-  sort: string; // a sortOptions.key
-  difficulties: Difficulty[];
-  range: string; // a levelRanges.value
-  staffOnly: boolean;
+  searchType: SearchType;
+  staffPick: boolean;
+  sortBy: SortBy;
+  sortOrder: "asc" | "desc";
+  keywords: string;
+  minRating: string;
+  maxRating: string;
+  titleIncludes: string;
+  descriptionIncludes: string;
+  artistsIncludes: string;
+  tags: string;
+  authorHandle: string;
 };
 
 export const defaultFilters: Filters = {
-  q: "",
-  sort: "decaying_likes:desc",
-  difficulties: [],
-  range: "any",
-  staffOnly: false,
+  searchType: "quick",
+  staffPick: false,
+  sortBy: "decaying_likes",
+  sortOrder: "desc",
+  keywords: "",
+  minRating: "",
+  maxRating: "",
+  titleIncludes: "",
+  descriptionIncludes: "",
+  artistsIncludes: "",
+  tags: "",
+  authorHandle: "",
 };
 
-export function filtersToQuery(f: Filters, page: number, limit: number): ChartQuery {
-  const sort = sortOptions.find((o) => o.key === f.sort) ?? sortOptions[0];
-  const range = levelRanges.find((r) => r.value === f.range) ?? levelRanges[0];
-  return {
-    sort_by: sort.value,
-    sort_order: sort.order,
-    q: f.q.trim() || undefined,
-    staff_pick: f.staffOnly || undefined,
-    difficulties: f.difficulties.length ? f.difficulties : undefined,
-    min_rating: range.min_rating,
-    max_rating: range.max_rating,
-    page,
-    limit,
-  };
+export function filtersToApiParams(
+  f: Filters,
+  page: number,
+  limit: number,
+): Record<string, string | number> {
+  const actualType = f.searchType === "newest" ? "quick" : f.searchType;
+  const params: Record<string, string | number> = { type: actualType, page, limit };
+
+  if (f.staffPick && actualType !== "random") params.staff_pick = 1;
+  if (f.authorHandle.trim()) params.sonolus_handle_is = f.authorHandle.trim();
+
+  if (actualType === "quick") {
+    if (f.keywords.trim()) params.meta_includes = f.keywords.trim();
+    params.sort_by = f.searchType === "newest" ? "created_at" : f.sortBy;
+    params.sort_order = f.sortOrder;
+  } else if (f.searchType === "advanced") {
+    if (f.titleIncludes.trim()) params.title_includes = f.titleIncludes.trim();
+    else if (f.keywords.trim()) params.title_includes = f.keywords.trim();
+    if (f.descriptionIncludes.trim()) params.description_includes = f.descriptionIncludes.trim();
+    if (f.artistsIncludes.trim()) params.artists_includes = f.artistsIncludes.trim();
+    if (f.minRating.trim()) params.minR = f.minRating.trim();
+    if (f.maxRating.trim()) params.maxR = f.maxRating.trim();
+    if (f.tags.trim()) params.tags = f.tags.trim();
+    params.sort_by = f.sortBy;
+    params.sort_order = f.sortOrder;
+  }
+  return params;
 }
 
 export function isDefault(f: Filters): boolean {
   return (
-    f.q.trim() === "" &&
-    f.difficulties.length === 0 &&
-    f.range === "any" &&
-    !f.staffOnly &&
-    f.sort === defaultFilters.sort
+    f.searchType === defaultFilters.searchType &&
+    !f.staffPick &&
+    f.sortBy === defaultFilters.sortBy &&
+    f.sortOrder === "desc" &&
+    f.keywords.trim() === "" &&
+    f.minRating === "" &&
+    f.maxRating === "" &&
+    f.titleIncludes === "" &&
+    f.descriptionIncludes === "" &&
+    f.artistsIncludes === "" &&
+    f.tags === "" &&
+    f.authorHandle === ""
   );
 }
 
-/** Count of active *filter* facets (excludes search + sort) — for the mobile sheet badge. */
 export function activeFilterCount(f: Filters): number {
-  return f.difficulties.length + (f.range !== "any" ? 1 : 0) + (f.staffOnly ? 1 : 0);
+  let n = 0;
+  if (f.staffPick) n++;
+  if (f.minRating || f.maxRating) n++;
+  if (f.tags.trim()) n++;
+  if (f.authorHandle.trim()) n++;
+  if (f.titleIncludes || f.descriptionIncludes || f.artistsIncludes) n++;
+  return n;
 }

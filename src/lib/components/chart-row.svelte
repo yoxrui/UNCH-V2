@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { Chart } from "$lib/data/index.js";
-  import { difficultyFromTags, difficultyMeta, compact, relativeTime } from "$lib/data/index.js";
+  import { difficultyFromTags, difficultyMeta, compact, relativeTime, coverUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import DifficultyBadge from "./difficulty-badge.svelte";
-  import { RiHeart3Fill, RiChat3Line, RiStarFill, RiTimeLine } from "remixicon-svelte";
+  import FormattedText from "./formatted-text.svelte";
+  import { RiHeart3Fill, RiChat3Line, RiStarFill, RiTimeLine } from "$lib/icons.js";
 
   let { chart }: { chart: Chart } = $props();
   const difficulty = $derived(difficultyFromTags(chart.tags, chart.rating));
@@ -13,15 +14,15 @@
 <article
   class="group bg-card/70 hover:bg-card ring-border/60 hover:ring-border relative flex items-center gap-4 rounded-xl p-3 ring-1 transition-colors"
 >
-  <CoverArt id={chart.id} title={chart.title} {ring} class="size-16 shrink-0 rounded-lg" />
+  <CoverArt id={chart.id} title={chart.title} src={coverUrl(chart)} {ring} class="size-16 shrink-0 rounded-lg" />
 
   <div class="flex min-w-0 flex-1 flex-col gap-1.5">
     <div class="flex items-start gap-2">
       <h3 class="min-w-0 flex-1 truncate text-base font-semibold tracking-tight">
         <a
-          href={`/levels/${chart.id}`}
+          href={`/levels/UnCh-${chart.id}`}
           class="hover:text-primary transition-colors after:absolute after:inset-0 after:content-['']"
-          >{chart.title}</a
+          ><FormattedText text={chart.title} /></a
         >
       </h3>
       {#if chart.staff_pick}
@@ -36,11 +37,11 @@
     <p class="text-muted-foreground truncate text-xs">
       by
       <a
-        href={`/creators/${chart.author}`}
+        href={`/creators/${chart.author_handle}`}
         class="relative z-10 font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
         >{chart.chart_design}</a
       >
-      · <span class="text-foreground/80 font-medium">{chart.artists}</span>
+      · <span class="text-foreground/80 font-medium"><FormattedText text={chart.artists} /></span>
     </p>
 
     <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5 pt-0.5">

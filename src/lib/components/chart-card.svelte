@@ -1,24 +1,22 @@
 <script lang="ts">
   import type { Chart } from "$lib/data/index.js";
-  import { difficultyFromTags, compact } from "$lib/data/index.js";
+  import { difficultyFromTags, compact, coverUrl, backgroundUrl, bgmProxyUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import DifficultyBadge from "./difficulty-badge.svelte";
   import Waveform from "./waveform.svelte";
+  import FormattedText from "./formatted-text.svelte";
   import { Spring } from "svelte/motion";
   import { fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
-  import { RiHeart3Fill, RiChat3Line, RiStarFill } from "remixicon-svelte";
+  import { RiHeart3Fill, RiChat3Line, RiStarFill } from "$lib/icons.js";
 
   let { chart }: { chart: Chart } = $props();
   const difficulty = $derived(difficultyFromTags(chart.tags, chart.rating));
 
   let hovered = $state(false);
-  // Compact waveforms are heavy (one wavesurfer instance each), so only mount
-  // after the first hover — never 25 at once on a grid.
   let everHovered = $state(false);
   let reduced = false;
 
-  // Osu-like settle: spring the hover lift + a small heart pop.
   const lift = new Spring(0, { stiffness: 0.2, damping: 0.7 });
   const heart = new Spring(1, { stiffness: 0.18, damping: 0.45 });
 
@@ -53,6 +51,7 @@
     <div class="aspect-16/7 w-full overflow-hidden">
       <CoverArt
         id={`${chart.id}-bg`}
+        src={backgroundUrl(chart)}
         rounded="rounded-none"
         class="size-full transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
       />
@@ -62,6 +61,7 @@
     <CoverArt
       id={chart.id}
       title={chart.title}
+      src={coverUrl(chart)}
       class="ring-card absolute bottom-0 left-4 size-16 translate-y-1/2 ring-4"
     />
 
@@ -77,13 +77,12 @@
       </span>
     {/if}
 
-    <!-- compact waveform preview, lazily mounted on first hover -->
     {#if everHovered && hovered}
       <div
         transition:fly={{ y: 10, duration: 200, easing: cubicOut }}
         class="bg-background/70 absolute right-2 bottom-2 left-24 z-10 rounded-lg px-2 py-1 shadow-sm backdrop-blur"
       >
-        <Waveform id={chart.id} variant="compact" height={28} />
+        <Waveform id={chart.id} src={bgmProxyUrl(chart)} variant="compact" height={28} />
       </div>
     {/if}
   </div>
@@ -93,17 +92,17 @@
     <div class="min-w-0 space-y-1">
       <h3 class="truncate text-base font-semibold tracking-tight">
         <a
-          href={`/levels/${chart.id}`}
+          href={`/levels/UnCh-${chart.id}`}
           class="hover:text-primary transition-colors after:absolute after:inset-0 after:content-['']"
-          >{chart.title}</a
+          ><FormattedText text={chart.title} /></a
         >
       </h3>
-      <p class="text-muted-foreground truncate text-sm">{chart.artists}</p>
+      <p class="text-muted-foreground truncate text-sm"><FormattedText text={chart.artists} /></p>
     </div>
 
     <div class="text-muted-foreground mt-auto flex items-center justify-between gap-2 text-xs">
       <a
-        href={`/creators/${chart.author}`}
+        href={`/creators/${chart.author_handle}`}
         class="relative z-10 inline-flex min-w-0 items-center gap-1 truncate font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
         >{chart.chart_design}</a
       >

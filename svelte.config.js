@@ -13,7 +13,9 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			'$lib': './src/lib',
-			'$lib/*': './src/lib/*'
+			'$lib/*': './src/lib/*',
+			'remixicon-icon': './node_modules/remixicon-svelte/dist/icons',
+			'remixicon-icon/*': './node_modules/remixicon-svelte/dist/icons/*'
 		}
 	}
 };

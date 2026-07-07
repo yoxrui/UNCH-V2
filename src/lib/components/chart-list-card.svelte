@@ -5,10 +5,13 @@
     difficultyMeta,
     compact,
     parseDescriptionMeta,
+    coverUrl,
+    bgmProxyUrl,
   } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import DifficultyBadge from "./difficulty-badge.svelte";
   import Waveform from "./waveform.svelte";
+  import FormattedText from "./formatted-text.svelte";
   import { slide } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import {
@@ -17,7 +20,7 @@
     RiStarFill,
     RiPlayFill,
     RiArrowDownSLine,
-  } from "remixicon-svelte";
+  } from "$lib/icons.js";
 
   let { chart }: { chart: Chart } = $props();
 
@@ -43,7 +46,7 @@
   <div class="flex items-stretch gap-3 p-3">
     <!-- Cover + play / preview affordance -->
     <div class="relative shrink-0">
-      <CoverArt id={chart.id} title={chart.title} {ring} class="size-18 rounded-xl" />
+      <CoverArt id={chart.id} title={chart.title} src={coverUrl(chart)} {ring} class="size-18 rounded-xl" />
       <button
         type="button"
         onclick={toggle}
@@ -62,9 +65,9 @@
       <div class="flex min-w-0 items-start gap-2">
         <h3 class="min-w-0 flex-1 text-[15px] leading-snug font-semibold tracking-tight">
           <a
-            href={`/levels/${chart.id}`}
+            href={`/levels/UnCh-${chart.id}`}
             class="hover:text-primary line-clamp-2 transition-colors after:absolute after:inset-0 after:content-['']"
-            >{chart.title}</a
+            ><FormattedText text={chart.title} /></a
           >
         </h3>
         {#if chart.staff_pick}
@@ -78,12 +81,12 @@
 
       <div class="flex flex-wrap items-center gap-1.5">
         <DifficultyBadge {difficulty} level={chart.rating} size="sm" />
-        <span class="text-muted-foreground min-w-0 truncate text-xs">{chart.artists}</span>
+        <span class="text-muted-foreground min-w-0 truncate text-xs"><FormattedText text={chart.artists} /></span>
       </div>
 
       <div class="mt-auto flex items-center justify-between gap-2 pt-0.5">
         <a
-          href={`/creators/${chart.author}`}
+          href={`/creators/${chart.author_handle}`}
           class="relative z-10 min-w-0 truncate text-xs font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
           >{chart.chart_design}</a
         >
@@ -119,7 +122,7 @@
     <div transition:slide={{ duration: 200, easing: cubicOut }} class="relative z-10 px-3 pb-3">
       <div class="border-border/70 space-y-3 border-t pt-3">
         {#if mounted}
-          <Waveform id={chart.id} variant="compact" height={30} />
+          <Waveform id={chart.id} src={bgmProxyUrl(chart)} variant="compact" height={30} />
         {/if}
 
         {#if meta.bpm || meta.notes || meta.combo}

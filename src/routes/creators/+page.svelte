@@ -2,8 +2,9 @@
   import SiteHeader from "$lib/components/site-header.svelte";
   import SiteFooter from "$lib/components/site-footer.svelte";
   import CoverArt from "$lib/components/cover-art.svelte";
+  import FormattedText from "$lib/components/formatted-text.svelte";
   import { compact } from "$lib/data/index.js";
-  import { RiHeart3Fill, RiStackLine, RiStarFill } from "remixicon-svelte";
+  import { RiHeart3Fill, RiStackLine, RiStarFill } from "$lib/icons.js";
 
   let { data } = $props();
 </script>
@@ -37,9 +38,9 @@
           <div class="flex items-center gap-1.5">
             <h2 class="truncate font-semibold">
               <a
-                href={`/creators/${c.account.sonolus_id}`}
+                href={`/creators/${c.account.sonolus_handle}`}
                 class="hover:text-primary after:absolute after:inset-0 after:content-['']"
-                >{c.account.sonolus_username}</a
+                ><FormattedText text={c.account.sonolus_username} /></a
               >
             </h2>
             {#if c.account.admin}

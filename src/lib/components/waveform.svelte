@@ -1,105 +1,103 @@
+<script lang="ts" module>
+  let currentWave: { stop: () => void } | null = null;
+  const peakCache = new Map<string, { peaks: number[][]; duration: number }>();
+</script>
+
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
-  import { Tween } from "svelte/motion";
-  import { cubicOut } from "svelte/easing";
-  import { getPeaks } from "$lib/data/index.js";
+  import { onMount } from "svelte";
   import { cn } from "$lib/utils.js";
-  import { RiPlayFill, RiPauseFill } from "remixicon-svelte";
+  import { RiPlayFill, RiPauseFill } from "$lib/icons.js";
   import type { WaveSurferOptions } from "wavesurfer.js";
 
   let {
     id,
+    src = null,
     variant = "full",
     height,
     class: className,
   }: {
     id: string;
+    src?: string | null;
     variant?: "full" | "compact";
     height?: number;
     class?: string;
   } = $props();
 
-  // The demo has no audio, so this is a *visual* preview: wavesurfer.js draws
-  // the (seeded, deterministic) waveform and we sweep a playhead across it with
-  // svelte/motion. There is intentionally no sound.
-  const PREVIEW_MS = 9000;
-  const peaks = $derived(getPeaks(id, variant === "compact" ? 64 : 120));
-
   let container = $state<HTMLDivElement | null>(null);
   let playing = $state(false);
-  let reduced = $state(false);
-  const progress = new Tween(0, { duration: 120, easing: cubicOut });
+  let ready = $state(false);
 
   type WS = import("wavesurfer.js").default;
   let ws: WS | null = null;
-  let token = 0; // guards against races when recreating on theme change
+  let token = 0;
 
   function cssVar(el: Element, name: string) {
     return getComputedStyle(el).getPropertyValue(name).trim();
   }
 
+  const api = {
+    stop: () => ws?.pause(),
+  };
+
   async function create() {
-    if (!container) return;
+    if (!container || !src) return;
     const el = container;
     const mine = ++token;
     const { default: WaveSurfer } = await import("wavesurfer.js");
     if (mine !== token || !el.isConnected) return;
 
     ws?.destroy();
+    ready = false;
+    playing = false;
+
+    const muted = cssVar(el, "--muted-foreground") || "#888";
+    const primary = cssVar(el, "--primary") || "#6366f1";
+
     const opts: WaveSurferOptions = {
       container: el,
-      peaks: [peaks],
-      duration: 1, // arbitrary; we own the playhead
       height: height ?? (variant === "compact" ? 36 : 72),
       barWidth: variant === "compact" ? 2 : 3,
-      barGap: variant === "compact" ? 1.5 : 2,
+      barGap: variant === "compact" ? 3 : 5,
       barRadius: 8,
-      cursorWidth: 0, // our own cursor overlay instead
-      waveColor: cssVar(el, "--muted-foreground") || "#888",
-      progressColor: cssVar(el, "--muted-foreground") || "#888",
-      interact: false,
+      barHeight: 0.7,
+      normalize: false,
+      cursorWidth: 1,
+      waveColor: muted,
+      progressColor: primary,
+      interact: true,
+      url: src,
     };
-    ws = WaveSurfer.create(opts);
-  }
 
-  function seek(e: MouseEvent) {
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    progress.set(ratio, { duration: 0 });
-    if (playing) play();
-  }
-
-  function play() {
-    if (reduced) {
-      progress.set(1, { duration: 0 });
-      return;
+    const cached = peakCache.get(src);
+    if (cached) {
+      opts.peaks = cached.peaks;
+      opts.duration = cached.duration;
     }
-    playing = true;
-    if (progress.current >= 0.999) progress.set(0, { duration: 0 });
-    const remaining = PREVIEW_MS * (1 - progress.current);
-    progress.set(1, { duration: remaining, easing: (t) => t }).then(() => {
-      if (untrack(() => playing) && progress.current >= 0.999) {
-        playing = false;
-        progress.set(0, { duration: 400, easing: cubicOut });
+
+    ws = WaveSurfer.create(opts);
+    ws.on("ready", () => {
+      ready = true;
+      if (src && ws && !peakCache.has(src)) {
+        peakCache.set(src, { peaks: ws.exportPeaks(), duration: ws.getDuration() });
       }
     });
-  }
-
-  function pause() {
-    playing = false;
-    progress.set(progress.current, { duration: 0 });
+    ws.on("play", () => {
+      playing = true;
+      if (currentWave && currentWave !== api) currentWave.stop();
+      currentWave = api;
+    });
+    ws.on("pause", () => (playing = false));
+    ws.on("finish", () => (playing = false));
   }
 
   function toggle() {
-    playing ? pause() : play();
+    if (!src) return;
+    ws?.playPause();
   }
 
   onMount(() => {
-    reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     create();
 
-    // Re-render with theme-matched colors when light/dark toggles.
     const obs = new MutationObserver(() => create());
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
@@ -108,6 +106,7 @@
       obs.disconnect();
       ws?.destroy();
       ws = null;
+      if (currentWave === api) currentWave = null;
     };
   });
 </script>
@@ -116,10 +115,11 @@
   <button
     type="button"
     onclick={toggle}
-    aria-label={playing ? "Pause preview" : "Play preview"}
+    disabled={!src || !ready}
+    aria-label={playing ? "Pause" : "Play"}
     aria-pressed={playing}
     class={cn(
-      "grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-90 motion-reduce:active:scale-100",
+      "grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-90 disabled:opacity-50 motion-reduce:active:scale-100",
       variant === "compact" ? "size-7" : "size-9",
     )}
   >
@@ -130,33 +130,5 @@
     {/if}
   </button>
 
-  <!-- waveform + playhead overlay -->
-  <div
-    class="relative min-w-0 flex-1 cursor-pointer"
-    role="slider"
-    aria-label="Seek preview"
-    aria-valuemin={0}
-    aria-valuemax={100}
-    aria-valuenow={Math.round(progress.current * 100)}
-    tabindex="0"
-    onclick={seek}
-    onkeydown={(e) => {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
-        toggle();
-      }
-    }}
-  >
-    <div bind:this={container} class="w-full"></div>
-    <!-- played region tint -->
-    <div
-      class="pointer-events-none absolute inset-y-0 left-0 rounded-l bg-primary/15"
-      style="width: {progress.current * 100}%"
-    ></div>
-    <!-- cursor -->
-    <div
-      class="bg-primary pointer-events-none absolute inset-y-0 w-0.5 rounded-full"
-      style="left: {progress.current * 100}%; opacity: {progress.current > 0 || playing ? 1 : 0}"
-    ></div>
-  </div>
+  <div bind:this={container} class="min-w-0 flex-1"></div>
 </div>
