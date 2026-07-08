@@ -1,9 +1,15 @@
+/* Order cascade layers so Tailwind `utilities` win over DaisyUI component
+   classes (`.btn`, `.carousel-item`, …). Must be declared before the imports. */
+@layer theme, base, components, daisyui, utilities;
+
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "@fontsource-variable/geist";
-@import "shadcn-svelte/tailwind.css";
 @import "@fontsource-variable/roboto";
 @import "@fontsource-variable/instrument-sans";
+
+@plugin "daisyui" {
+  themes: false;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -25,7 +31,7 @@
   --accent: oklch(0.457 0.24 262);
   --accent-foreground: oklch(0.962 0.018 262);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0.012 262);
+  --bc: oklch(0.922 0.012 262);
   --input: oklch(0.922 0.012 262);
   --ring: oklch(0.711 0.019 262);
   --chart-1: oklch(0.833 0.12 262);
@@ -44,6 +50,38 @@
   --sidebar-ring: oklch(0.711 0.019 262);
   --featured: oklch(0.93 0.04 200);
   --featured-foreground: oklch(0.205 0.04 220);
+
+  /* daisyUI v5 theme — mapped onto the existing design tokens so components
+     inherit the app's colors. Because these reference the tokens above (which
+     `.dark` re-defines), class-based dark mode keeps working with no duplication. */
+  --color-base-100: var(--card);
+  --color-base-200: var(--muted);
+  --color-base-300: var(--secondary);
+  --color-base-content: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-content: var(--accent-foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+  --color-info: oklch(0.7 0.14 233);
+  --color-info-content: oklch(0.98 0.01 233);
+  --color-success: oklch(0.72 0.16 152);
+  --color-success-content: oklch(0.98 0.01 152);
+  --color-warning: oklch(0.82 0.16 84);
+  --color-warning-content: oklch(0.28 0.06 84);
+  --color-error: var(--destructive);
+  --color-error-content: var(--primary-foreground);
+  --radius-selector: 0.5rem;
+  --radius-field: var(--radius);
+  --radius-box: var(--radius);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
 
 .dark {
@@ -62,7 +100,7 @@
   --accent: oklch(0.398 0.195 262);
   --accent-foreground: oklch(0.962 0.018 262);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --bc: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.542 0.034 262);
   --chart-1: oklch(0.833 0.12 262);
@@ -98,7 +136,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-border: var(--border);
+  --color-border: var(--bc);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);

@@ -8,7 +8,7 @@ import type {
   LeaderboardType,
 } from "./types.js";
 
-export const API_URL = "https://sono_api.untitledcharts.com";
+export const API_URL = "https://sono-api.untitledcharts.com";
 
 type Fetch = typeof fetch;
 

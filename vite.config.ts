@@ -12,16 +12,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
-      'bits-ui',
-      'layerchart',
-      'embla-carousel-svelte',
       'wavesurfer.js',
-      'vaul-svelte',
-      'paneforge',
-      'formsnap',
-      'svelte-sonner',
       'mode-watcher',
-      '@lucide/svelte',
     ],
   },
   server: {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Select from "$lib/components/ui/select/index.js";
+  import Select from "$lib/components/select.svelte";
   import { cn } from "$lib/utils.js";
   import {
     searchTypes,
@@ -11,10 +11,6 @@
 
   let { filters = $bindable() }: { filters: Filters } = $props();
 
-  const typeLabel = $derived(searchTypes.find((o) => o.value === filters.searchType)?.label ?? "Quick");
-  const sortLabel = $derived(sortByOptions.find((o) => o.value === filters.sortBy)?.label ?? "Decaying Likes");
-  const orderLabel = $derived(orderOptions.find((o) => o.value === filters.sortOrder)?.label ?? "Descending");
-
   const showSort = $derived(filters.searchType !== "random" && filters.searchType !== "newest");
   const isAdvanced = $derived(filters.searchType === "advanced");
 
@@ -23,44 +19,35 @@
 </script>
 
 <div
-  class="bg-card/60 supports-backdrop-filter:bg-card/40 space-y-3 rounded-2xl border p-3 backdrop-blur-xl sm:p-4"
+  class="bg-card/60 supports-backdrop-filter:bg-card/40 relative z-30 space-y-3 rounded-2xl border p-3 backdrop-blur-xl sm:p-4"
 >
   <div class="flex flex-wrap items-center gap-2.5">
     <RiEqualizerLine class="text-muted-foreground size-4" />
 
-    <Select.Root type="single" bind:value={filters.searchType}>
-      <Select.Trigger class="h-10 rounded-xl sm:w-40" aria-label="Search type">
-        <span class="text-muted-foreground mr-1 text-xs">Type</span>{typeLabel}
-      </Select.Trigger>
-      <Select.Content>
-        {#each searchTypes as o (o.value)}
-          <Select.Item value={o.value} label={o.label}>{o.label}</Select.Item>
-        {/each}
-      </Select.Content>
-    </Select.Root>
+    <Select
+      bind:value={filters.searchType}
+      options={searchTypes}
+      label="Type"
+      ariaLabel="Search type"
+      class="sm:w-40"
+    />
 
     {#if showSort}
-      <Select.Root type="single" bind:value={filters.sortBy}>
-        <Select.Trigger class="h-10 rounded-xl sm:w-48" aria-label="Sort by">
-          <span class="text-muted-foreground mr-1 text-xs">Sort</span>{sortLabel}
-        </Select.Trigger>
-        <Select.Content>
-          {#each sortByOptions as o (o.value)}
-            <Select.Item value={o.value} label={o.label}>{o.label}</Select.Item>
-          {/each}
-        </Select.Content>
-      </Select.Root>
+      <Select
+        bind:value={filters.sortBy}
+        options={sortByOptions}
+        label="Sort"
+        ariaLabel="Sort by"
+        class="sm:w-48"
+      />
 
-      <Select.Root type="single" bind:value={filters.sortOrder}>
-        <Select.Trigger class="h-10 rounded-xl sm:w-40" aria-label="Order">
-          <span class="text-muted-foreground mr-1 text-xs">Order</span>{orderLabel}
-        </Select.Trigger>
-        <Select.Content>
-          {#each orderOptions as o (o.value)}
-            <Select.Item value={o.value} label={o.label}>{o.label}</Select.Item>
-          {/each}
-        </Select.Content>
-      </Select.Root>
+      <Select
+        bind:value={filters.sortOrder}
+        options={orderOptions}
+        label="Order"
+        ariaLabel="Order"
+        class="sm:w-40"
+      />
 
       <button
         type="button"

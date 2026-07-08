@@ -7,7 +7,7 @@
   import ChartCard from "$lib/components/chart-card.svelte";
   import ChartListCard from "$lib/components/chart-list-card.svelte";
   import Pager from "$lib/components/pager.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import Button from "$lib/components/button.svelte";
   import { cn } from "$lib/utils.js";
   import { page } from "$app/state";
   import {

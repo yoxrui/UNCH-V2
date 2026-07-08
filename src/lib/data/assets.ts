@@ -1,6 +1,6 @@
 import type { Chart } from "./types.js";
 
-export const ASSET_BASE_URL = "https://ba14959b4680d4b81463a1d708c63691.untitledcharts.com";
+export const ASSET_BASE_URL = "https://cdn.untitledcharts.com";
 
 export function assetUrl(author: string, id: string, hash: string | null | undefined): string | null {
   if (!author || !id || !hash) return null;
