@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-  <title>Creators — UntitledCharts</title>
+  <title>Creators | UntitledCharts</title>
 </svelte:head>
 
 <SiteHeader />

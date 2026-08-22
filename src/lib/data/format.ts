@@ -97,6 +97,11 @@ export function grouped(n: number): string {
   return n.toLocaleString("en-US");
 }
 
+/** Picks the singular or plural word for a count, e.g. plural(1, "chart") -> "chart". */
+export function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
+  return n === 1 ? singular : pluralForm;
+}
+
 const RELATIVE_DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = [
   { amount: 60, unit: "second" },
   { amount: 60, unit: "minute" },

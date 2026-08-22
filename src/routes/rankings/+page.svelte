@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-  <title>Rankings — UntitledCharts</title>
+  <title>Rankings | UntitledCharts</title>
 </svelte:head>
 
 <SiteHeader />

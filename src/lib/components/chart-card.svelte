@@ -44,7 +44,7 @@
   onfocusin={enter}
   onfocusout={leave}
   style="transform: translateY({lift.current}px)"
-  class="group bg-card relative flex flex-col overflow-hidden rounded-2xl ring-1 ring-border/70 transition-[box-shadow,outline] duration-200 hover:shadow-lg hover:shadow-primary/5 hover:ring-primary/40"
+  class="group bg-card relative flex h-full flex-col overflow-hidden rounded-2xl ring-1 ring-border/70 transition-[box-shadow,outline] duration-200 hover:shadow-lg hover:shadow-primary/5 hover:ring-primary/40"
 >
   <!-- banner + floating square cover -->
   <div class="relative">

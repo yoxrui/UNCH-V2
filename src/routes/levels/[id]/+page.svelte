@@ -17,6 +17,7 @@
     difficultyFromTags,
     compact,
     grouped,
+    plural,
     relativeTime,
     LEADERBOARD_TYPES,
     leaderboardMeta,
@@ -28,6 +29,8 @@
   } from "$lib/data/index.js";
   import {
     RiArrowLeftLine,
+    RiArrowLeftSLine,
+    RiArrowRightSLine,
     RiHeart3Fill,
     RiChat3Line,
     RiStarFill,
@@ -36,11 +39,14 @@
     RiTimeLine,
     RiTrophyLine,
     RiShareLine,
+    RiEditLine,
   } from "$lib/icons.js";
+  import { session } from "$lib/state/session.svelte";
 
   let { data } = $props();
   const chart = $derived(data.chart);
   const difficulty = $derived(difficultyFromTags(chart.tags, chart.rating));
+  const isOwner = $derived(session.isLoggedIn && session.user?.handle === chart.author_handle);
 
   const sonolusLink = $derived(`https://open.sonolus.com/untitledcharts.com/levels/UnCh-${chart.id}`);
   let shareLabel = $state("Share");
@@ -65,6 +71,24 @@
   }
 
   const PERPAGE = 10;
+
+  let lbScroller = $state<HTMLDivElement | null>(null);
+  let canLeft = $state(false);
+  let canRight = $state(false);
+
+  function updateArrows() {
+    const el = lbScroller;
+    if (!el) return;
+    canLeft = el.scrollLeft > 4;
+    canRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+  }
+  function scrollTypes(dir: number) {
+    lbScroller?.scrollBy({ left: dir * 180, behavior: "smooth" });
+  }
+
+  $effect(() => {
+    if (lbScroller) updateArrows();
+  });
 
   // Leaderboard state
   let lbType = $state<LeaderboardType>("arcade_score_speed");
@@ -109,7 +133,7 @@
 </script>
 
 <svelte:head>
-  <title>{chart.title} — UntitledCharts</title>
+  <title>{chart.title} | UntitledCharts</title>
 </svelte:head>
 
 <SiteHeader />
@@ -144,10 +168,12 @@
             </span>
           {/if}
           <DifficultyBadge {difficulty} level={chart.rating} />
-          <span
-            class="text-muted-foreground border-border rounded-full border px-2 py-0.5 text-[11px] font-medium"
-            >{chart.status}</span
-          >
+          {#if chart.status === "PRIVATE"}
+            <span
+              class="text-muted-foreground border-border rounded-full border px-2 py-0.5 text-[11px] font-medium"
+              >{chart.status}</span
+            >
+          {/if}
         </div>
 
         <div class="min-w-0 space-y-1.5">
@@ -172,12 +198,12 @@
               <RiHeart3Fill class="size-4 text-rose-400" />
             </span>
             <span class="font-semibold">{grouped(chart.like_count)}</span>
-            <span class="text-muted-foreground">likes</span>
+            <span class="text-muted-foreground">{plural(chart.like_count, "like")}</span>
           </span>
           <span class="inline-flex items-center gap-1.5 tabular-nums">
             <RiChat3Line class="text-muted-foreground size-4" />
             <span class="font-semibold">{grouped(chart.comment_count)}</span>
-            <span class="text-muted-foreground">comments</span>
+            <span class="text-muted-foreground">{plural(chart.comment_count, "comment")}</span>
           </span>
         </div>
 
@@ -217,7 +243,7 @@
 
     {#if chart.description}
       <p class="text-foreground/90 mt-5 border-t pt-5 text-sm leading-relaxed whitespace-pre-line">
-        <FormattedText text={chart.description} />
+        <FormattedText text={chart.description} linkify />
       </p>
     {/if}
 
@@ -250,6 +276,15 @@
       <RiShareLine class="size-4" />
       <span>{shareLabel}</span>
     </button>
+    {#if isOwner}
+      <a
+        href={`/dashboard/edit/UnCh-${chart.id}`}
+        class="bg-primary text-primary-foreground inline-flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90"
+      >
+        <RiEditLine class="size-4" />
+        <span>Edit</span>
+      </a>
+    {/if}
   </div>
 
   <section class="bg-card rounded-3xl border p-4 sm:p-6">
@@ -275,22 +310,46 @@
       </h2>
     </div>
 
-    <div class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
-      {#each LEADERBOARD_TYPES as t (t)}
-        <button
-          type="button"
-          onclick={() => (lbType = t)}
-          aria-pressed={lbType === t}
-          class={cn(
-            "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
-            lbType === t
-              ? "bg-primary text-primary-foreground border-transparent"
-              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30",
-          )}
-        >
-          {leaderboardMeta[t].short}
-        </button>
-      {/each}
+    <div class="relative flex items-center gap-1">
+      <button
+        type="button"
+        onclick={() => scrollTypes(-1)}
+        aria-label="Scroll left"
+        disabled={!canLeft}
+        class="text-muted-foreground hover:text-foreground grid size-7 shrink-0 place-items-center rounded-full border transition-opacity disabled:pointer-events-none disabled:opacity-0"
+      >
+        <RiArrowLeftSLine class="size-4" />
+      </button>
+      <div
+        bind:this={lbScroller}
+        onscroll={updateArrows}
+        class="flex flex-1 gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {#each LEADERBOARD_TYPES as t (t)}
+          <button
+            type="button"
+            onclick={() => (lbType = t)}
+            aria-pressed={lbType === t}
+            class={cn(
+              "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
+              lbType === t
+                ? "bg-primary text-primary-foreground border-transparent"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30",
+            )}
+          >
+            {leaderboardMeta[t].short}
+          </button>
+        {/each}
+      </div>
+      <button
+        type="button"
+        onclick={() => scrollTypes(1)}
+        aria-label="Scroll right"
+        disabled={!canRight}
+        class="text-muted-foreground hover:text-foreground grid size-7 shrink-0 place-items-center rounded-full border transition-opacity disabled:pointer-events-none disabled:opacity-0"
+      >
+        <RiArrowRightSLine class="size-4" />
+      </button>
     </div>
     <p class="text-muted-foreground text-xs">{leaderboardMeta[lbType].blurb}</p>
 
@@ -299,7 +358,7 @@
         class="text-muted-foreground flex flex-col items-center gap-2 rounded-2xl border border-dashed py-14 text-sm"
       >
         <RiTrophyLine class="size-8 opacity-40" />
-        No scores submitted yet — be the first to play it.
+        No scores submitted yet, be the first to play it.
       </div>
     {:else}
       <LeaderboardTable entries={lb.data} type={lbType} startRank={(lbPage - 1) * PERPAGE + 1} />
@@ -310,7 +369,8 @@
   <!-- Comments -->
   <section class="space-y-4">
     <h2 class="font-heading text-lg font-semibold tracking-tight">
-      Comments <span class="text-muted-foreground font-normal tabular-nums">· {chart.comment_count}</span>
+      {plural(chart.comment_count, "Comment")}
+      <span class="text-muted-foreground font-normal tabular-nums">· {chart.comment_count}</span>
     </h2>
 
     {#if !cmLoading && cm.data.length === 0}

@@ -7,7 +7,7 @@
   import ChartCard from "$lib/components/chart-card.svelte";
   import ChartListCard from "$lib/components/chart-list-card.svelte";
   import Pager from "$lib/components/pager.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import Button from "$lib/components/button.svelte";
   import { cn } from "$lib/utils.js";
   import { page } from "$app/state";
   import {
@@ -106,7 +106,7 @@
 </script>
 
 <svelte:head>
-  <title>Browse — UntitledCharts</title>
+  <title>Browse | UntitledCharts</title>
 </svelte:head>
 
 <SiteHeader />
@@ -115,7 +115,7 @@
   <header class="space-y-1">
     <h1 class="font-heading text-xl font-bold tracking-tight sm:text-2xl">Browse charts</h1>
     <p class="text-muted-foreground hidden text-sm sm:block">
-      Filter the catalog by difficulty, level, and staff picks — sorted however you like.
+      Filter the catalog by difficulty, level, and staff picks, sorted however you like.
     </p>
   </header>
 

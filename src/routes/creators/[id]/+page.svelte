@@ -5,7 +5,7 @@
   import ChartCard from "$lib/components/chart-card.svelte";
   import FormattedText from "$lib/components/formatted-text.svelte";
   import { cn } from "$lib/utils.js";
-  import { compact, bannerGradient, profileUrl, bannerUrl } from "$lib/data/index.js";
+  import { compact, plural, bannerGradient, profileUrl, bannerUrl } from "$lib/data/index.js";
   import { RiArrowLeftLine, RiHeart3Fill, RiStackLine, RiStarFill } from "$lib/icons.js";
 
   let { data } = $props();
@@ -16,7 +16,7 @@
 </script>
 
 <svelte:head>
-  <title>{account.sonolus_username} — UntitledCharts</title>
+  <title>{account.sonolus_username} | UntitledCharts</title>
 </svelte:head>
 
 <SiteHeader />
@@ -44,6 +44,10 @@
       <div
         class="pointer-events-none absolute inset-x-0 bottom-0 h-12 backdrop-blur-md"
         style="mask-image: linear-gradient(to top, black, transparent); -webkit-mask-image: linear-gradient(to top, black, transparent);"
+      ></div>
+      <!-- Desktop: fade the banner into the card at the bottom -->
+      <div
+        class="from-card pointer-events-none absolute inset-x-0 bottom-0 hidden h-20 bg-linear-to-t to-transparent sm:block"
       ></div>
     </div>
     <div class="relative z-10 -mt-12 flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-end sm:px-6">
@@ -81,12 +85,12 @@
           <span class="inline-flex items-center gap-1.5">
             <RiStackLine class="size-4" /><span class="text-foreground font-semibold"
               >{charts.length}</span
-            > charts
+            > {plural(charts.length, "chart")}
           </span>
           <span class="inline-flex items-center gap-1.5">
             <RiHeart3Fill class="size-4 text-rose-400" /><span class="text-foreground font-semibold"
               >{compact(totalLikes)}</span
-            > likes
+            > {plural(totalLikes, "like")}
           </span>
           {#if staffPicks > 0}
             <span class="inline-flex items-center gap-1.5 text-amber-500">
@@ -106,6 +110,12 @@
         {#each charts as chart (chart.id)}
           <ChartCard {chart} />
         {/each}
+        <a
+          href={`/browse?sonolus_handle_is=${account.sonolus_handle}`}
+          class="bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted grid min-h-44 place-items-center rounded-2xl border border-dashed transition-colors"
+        >
+          <span class="font-heading text-base font-semibold">View All</span>
+        </a>
       </div>
     {:else}
       <p class="text-muted-foreground rounded-2xl border border-dashed py-16 text-center text-sm">

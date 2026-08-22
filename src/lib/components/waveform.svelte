@@ -95,9 +95,12 @@
     ws?.playPause();
   }
 
-  onMount(() => {
-    create();
+  $effect(() => {
+    src;
+    if (container) create();
+  });
 
+  onMount(() => {
     const obs = new MutationObserver(() => create());
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 

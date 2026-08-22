@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Chart } from "$lib/data/index.js";
   import ChartCard from "./chart-card.svelte";
-  import * as Carousel from "$lib/components/ui/carousel/index.js";
+  import * as Carousel from "$lib/components/carousel/index.js";
   import { cn } from "$lib/utils.js";
   import { RiArrowRightLine } from "$lib/icons.js";
 
@@ -23,7 +23,7 @@
   } = $props();
 </script>
 
-<section class="space-y-4">
+<section class="space-y-5">
   {#if title}
     <div class="flex items-end justify-between gap-3">
       <h2 class="font-heading text-lg font-semibold tracking-tight">{title}</h2>
@@ -43,9 +43,9 @@
 
   {#if carousel}
     <Carousel.Root opts={{ align: "start", dragFree: true, containScroll: "trimSnaps" }}>
-      <Carousel.Content class="-ms-4">
+      <Carousel.Content class="gap-5">
         {#each charts as chart (chart.id)}
-          <Carousel.Item class="basis-[78%] ps-4 sm:basis-1/2 lg:basis-1/4">
+          <Carousel.Item class="basis-[78%] sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-3.75rem)/4)]">
             <ChartCard {chart} />
           </Carousel.Item>
         {/each}

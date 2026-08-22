@@ -4,9 +4,9 @@
   import CoverArt from "./cover-art.svelte";
   import DifficultyBadge from "./difficulty-badge.svelte";
   import FormattedText from "./formatted-text.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import * as Carousel from "$lib/components/ui/carousel/index.js";
-  import type { CarouselAPI } from "$lib/components/ui/carousel/context.js";
+  import Button from "$lib/components/button.svelte";
+  import * as Carousel from "$lib/components/carousel/index.js";
+  import type { CarouselApi } from "$lib/components/carousel/index.js";
   import { Spring } from "svelte/motion";
   import { cn } from "$lib/utils.js";
   import {
@@ -20,7 +20,7 @@
 
   let { charts }: { charts: Chart[] } = $props();
 
-  let api = $state<CarouselAPI>();
+  let api = $state<CarouselApi>();
   let selected = $state(0);
   let paused = $state(false);
 

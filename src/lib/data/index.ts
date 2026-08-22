@@ -5,3 +5,5 @@ export * from "./assets.js";
 export * from "./api.js";
 export * from "./emojis.js";
 export * from "./browse.js";
+export * from "./mock-charts.js";
+export * from "./collections.js";

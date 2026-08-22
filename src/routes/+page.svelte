@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-  <title>UntitledCharts — Sonolus chart catalog</title>
+  <title>UntitledCharts | Sonolus chart catalog</title>
   <meta
     name="description"
     content="Browse, rank, and discover Sonolus rhythm-game fan-charts from the community."

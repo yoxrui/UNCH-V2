@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Drawer from "$lib/components/ui/drawer/index.js";
+  import Sheet from "$lib/components/sheet.svelte";
   import { cn } from "$lib/utils.js";
   import {
     searchTypes,
@@ -52,7 +52,7 @@
 </script>
 
 <div
-  class="bg-background/85 supports-backdrop-filter:bg-background/70 sticky top-[4.5rem] z-30 -mx-4 space-y-2.5 px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6"
+  class="bg-background/85 supports-backdrop-filter:bg-background/70 sticky top-18 z-30 -mx-4 space-y-2.5 px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6"
 >
   <!-- Search -->
   <div class="relative">
@@ -112,12 +112,11 @@
 </div>
 
 <!-- Sort + type bottom sheet -->
-<Drawer.Root bind:open={sortOpen}>
-  <Drawer.Content class="pb-[env(safe-area-inset-bottom)]">
-    <Drawer.Header class="text-left">
-      <Drawer.Title>Sort & type</Drawer.Title>
-    </Drawer.Header>
-    <div class="max-h-[65vh] space-y-5 overflow-y-auto px-4 pb-6">
+<Sheet bind:open={sortOpen} class="pb-[env(safe-area-inset-bottom)]">
+  <div class="px-4 py-3 text-left">
+    <h2 class="font-heading text-base font-semibold">Sort & type</h2>
+  </div>
+  <div class="max-h-[65vh] space-y-5 overflow-y-auto px-4 pb-6">
       <section class="space-y-2">
         <h3 class="text-muted-foreground text-xs font-semibold">Search type</h3>
         <div class="flex flex-wrap gap-2">
@@ -178,18 +177,16 @@
         </section>
       {/if}
     </div>
-  </Drawer.Content>
-</Drawer.Root>
+</Sheet>
 
 <!-- Filters bottom sheet -->
-<Drawer.Root bind:open={filtersOpen}>
-  <Drawer.Content class="pb-[env(safe-area-inset-bottom)]">
-    <Drawer.Header class="flex-row items-center justify-between text-left">
-      <Drawer.Title>Filters</Drawer.Title>
-      {#if activeCount > 0}
-        <button type="button" onclick={resetFilters} class="text-primary text-sm font-medium">Reset</button>
-      {/if}
-    </Drawer.Header>
+<Sheet bind:open={filtersOpen} class="pb-[env(safe-area-inset-bottom)]">
+  <div class="flex flex-row items-center justify-between px-4 py-3 text-left">
+    <h2 class="font-heading text-base font-semibold">Filters</h2>
+    {#if activeCount > 0}
+      <button type="button" onclick={resetFilters} class="text-primary text-sm font-medium">Reset</button>
+    {/if}
+  </div>
 
     <div class="max-h-[65vh] space-y-4 overflow-y-auto px-4 pt-1 pb-4">
       {#if filters.searchType !== "random"}
@@ -242,7 +239,7 @@
       {/if}
     </div>
 
-    <Drawer.Footer class="pt-2">
+    <div class="mt-auto flex flex-col gap-2 p-4 pt-2">
       <button
         type="button"
         onclick={() => (filtersOpen = false)}
@@ -251,6 +248,5 @@
         Show {total}
         {total === 1 ? "chart" : "charts"}
       </button>
-    </Drawer.Footer>
-  </Drawer.Content>
-</Drawer.Root>
+    </div>
+</Sheet>

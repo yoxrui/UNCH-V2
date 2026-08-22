@@ -43,7 +43,7 @@
           <span class="text-muted-foreground/70 text-xs">· {relativeTime(c.created_at)}</span>
         </div>
         <p class="text-foreground/90 mt-0.5 text-sm wrap-break-word whitespace-pre-line">
-          <FormattedText text={c.content} />
+          <FormattedText text={c.content} linkify />
         </p>
       </div>
     </li>
