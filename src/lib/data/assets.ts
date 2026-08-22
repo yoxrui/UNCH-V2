@@ -1,9 +1,12 @@
 import type { Chart } from "./types.js";
 
 export const ASSET_BASE_URL = "https://cdn.untitledcharts.com";
+<<<<<<< HEAD
 
 export const DEFAULT_AVATAR = "/defpfp.webp";
 export const DEFAULT_BANNER = "/def.webp";
+=======
+>>>>>>> 44d77f6faedd3aa3bbfc5a9d7327334914351f3e
 
 export function assetUrl(author: string, id: string, hash: string | null | undefined): string | null {
   if (!author || !id || !hash) return null;

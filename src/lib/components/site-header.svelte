@@ -1,6 +1,9 @@
 <script lang="ts">
   import Button from "$lib/components/button.svelte";
+<<<<<<< HEAD
   import UserProfileNav from "$lib/components/user-profile-nav.svelte";
+=======
+>>>>>>> 44d77f6faedd3aa3bbfc5a9d7327334914351f3e
   import { cn } from "$lib/utils.js";
   import { page } from "$app/state";
   import { toggleMode } from "mode-watcher";
