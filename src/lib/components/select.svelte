@@ -46,20 +46,10 @@
   });
 </script>
 
-<<<<<<< HEAD
 <details bind:this={root} bind:open class={cn("dropdown", className)}>
   <summary
     aria-label={ariaLabel}
     class="bg-card focus-visible:ring-ring/50 flex h-10 w-full cursor-pointer list-none items-center justify-between gap-1.5 rounded-xl border px-3 text-sm outline-none select-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden"
-=======
-<details bind:this={root} bind:open class="dropdown">
-  <summary
-    aria-label={ariaLabel}
-    class={cn(
-      "bg-card focus-visible:ring-ring/50 inline-flex h-10 cursor-pointer list-none items-center justify-between gap-1.5 rounded-xl border px-3 text-sm outline-none select-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden",
-      className,
-    )}
->>>>>>> 44d77f6faedd3aa3bbfc5a9d7327334914351f3e
   >
     <span class="flex min-w-0 items-center gap-1.5 truncate">
       {#if label}<span class="text-muted-foreground text-xs">{label}</span>{/if}
