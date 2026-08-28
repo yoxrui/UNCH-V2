@@ -7,15 +7,13 @@ export const load: PageLoad = async ({ params, fetch }) => {
   const chart = await fetchChart(fetch, id);
   if (!chart) error(404, "That chart doesn't exist (or isn't public).");
 
-  const [relatedRes, trends] = await Promise.all([
-    fetchCharts(fetch, { type: "quick", sort_by: "decaying_likes", limit: 9 }),
-    fetchTrends(fetch, chart.id),
-  ]);
-  const related = relatedRes.data.filter((c) => c.id !== chart.id).slice(0, 8);
+  const trends = await fetchTrends(fetch, chart.id);
 
   return {
     chart,
-    related,
+    related: fetchCharts(fetch, { type: "quick", sort_by: "decaying_likes", limit: 9 }).then((r) =>
+      r.data.filter((c) => c.id !== chart.id).slice(0, 8),
+    ),
     trends,
     meta: parseDescriptionMeta(chart.description),
   };

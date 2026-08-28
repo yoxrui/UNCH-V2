@@ -6,6 +6,7 @@
   import ChartRow from "$lib/components/chart-row.svelte";
   import ChartCard from "$lib/components/chart-card.svelte";
   import ChartListCard from "$lib/components/chart-list-card.svelte";
+  import ChartSkeleton from "$lib/components/chart-skeleton.svelte";
   import Pager from "$lib/components/pager.svelte";
   import Button from "$lib/components/button.svelte";
   import { cn } from "$lib/utils.js";
@@ -58,6 +59,8 @@
   let charts = $state<Chart[]>([]);
   let pageCount = $state(1);
   let loading = $state(true);
+
+  const gridCharts = $derived(charts.slice(0, Math.floor(charts.length / 3) * 3));
 
   // Reset to the first page whenever the filter set changes.
   const filterKey = $derived(
@@ -189,7 +192,26 @@
   </div>
 
   <!-- Results -->
-  {#if !loading && charts.length === 0}
+  {#if loading}
+    <div class="space-y-2.5 md:hidden">
+      {#each Array(6) as _, i (i)}
+        <ChartSkeleton variant="list" />
+      {/each}
+    </div>
+    {#if view === "list"}
+      <div class="hidden space-y-2.5 md:block">
+        {#each Array(8) as _, i (i)}
+          <ChartSkeleton variant="list" />
+        {/each}
+      </div>
+    {:else}
+      <div class="hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">
+        {#each Array(9) as _, i (i)}
+          <ChartSkeleton />
+        {/each}
+      </div>
+    {/if}
+  {:else if charts.length === 0}
     <div
       class="text-muted-foreground flex flex-col items-center gap-3 rounded-2xl border border-dashed py-20"
     >
@@ -218,7 +240,7 @@
       </div>
     {:else}
       <div class="hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">
-        {#each charts as chart (chart.id)}
+        {#each gridCharts as chart (chart.id)}
           <div animate:flip={{ duration: 250 }} in:fade={{ duration: 180 }}>
             <ChartCard {chart} />
           </div>

@@ -39,7 +39,6 @@
   style="transform: translateY({lift.current}px)"
   class="group bg-card ring-border/70 hover:ring-primary/40 relative flex h-full flex-col overflow-hidden rounded-2xl ring-1 transition-[box-shadow,outline] duration-200 hover:shadow-lg hover:shadow-primary/5"
 >
-  <!-- banner + floating square cover -->
   <div class="relative">
     <div class="aspect-16/7 w-full overflow-hidden">
       <CoverArt
@@ -77,7 +76,6 @@
       {chart.status}
     </span>
 
-    <!-- Desktop: hover actions in the same spot as the card music player -->
     <div
       class="pointer-events-none absolute right-2 bottom-2 left-24 z-10 hidden items-center gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:flex"
     >
@@ -97,7 +95,6 @@
     </div>
   </div>
 
-  <!-- body -->
   <div class="flex flex-1 flex-col gap-3 px-4 pt-9 pb-4">
     <div class="min-w-0 space-y-1">
       <h3 class="truncate text-base font-semibold tracking-tight">
@@ -119,7 +116,6 @@
     </div>
   </div>
 
-  <!-- Mobile: whole card opens the actions drawer -->
   <button
     type="button"
     onclick={() => (drawerOpen = true)}
@@ -128,7 +124,6 @@
   ></button>
 </article>
 
-<!-- Mobile actions drawer -->
 <Sheet bind:open={drawerOpen}>
   <div class="p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
     <div class="flex flex-col items-center gap-2 px-4 pt-3 pb-4 text-center">

@@ -133,5 +133,16 @@
     {/if}
   </button>
 
-  <div bind:this={container} class="min-w-0 flex-1"></div>
+  <div class="relative min-w-0 flex-1" style={`height:${height ?? (variant === "compact" ? 36 : 72)}px`}>
+    {#if !ready}
+      <div class="bg-muted absolute inset-0 animate-pulse rounded-md" aria-hidden="true"></div>
+    {/if}
+    <div
+      bind:this={container}
+      class={cn(
+        "absolute inset-0 origin-center transition-all duration-500 ease-out motion-reduce:transition-none",
+        ready ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0",
+      )}
+    ></div>
+  </div>
 </div>

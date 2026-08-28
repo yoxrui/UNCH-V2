@@ -45,11 +45,27 @@
     {/each}
   </div>
 
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-    {#each data.charts as chart (chart.id)}
-      <RankingCard {chart} {lbType} />
-    {/each}
-  </div>
+  {#await data.charts}
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {#each Array(4) as _, i (i)}
+        <div class="bg-card ring-border/70 flex gap-3 rounded-2xl p-4 ring-1">
+          <div class="bg-muted size-16 shrink-0 animate-pulse rounded-xl"></div>
+          <div class="flex-1 space-y-2 py-1">
+            <div class="bg-muted h-4 w-2/3 animate-pulse rounded"></div>
+            <div class="bg-muted h-3 w-1/3 animate-pulse rounded"></div>
+            <div class="bg-muted mt-3 h-3 w-full animate-pulse rounded"></div>
+            <div class="bg-muted h-3 w-5/6 animate-pulse rounded"></div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {:then charts}
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {#each charts as chart (chart.id)}
+        <RankingCard {chart} {lbType} />
+      {/each}
+    </div>
+  {/await}
 </main>
 
 <SiteFooter />

@@ -9,6 +9,10 @@ export { default as RiBookmarkLine } from "remixicon-icon/bookmark-line.svelte";
 export { default as RiChat3Line } from "remixicon-icon/chat-3-line.svelte";
 export { default as RiCheckLine } from "remixicon-icon/check-line.svelte";
 export { default as RiCloseLine } from "remixicon-icon/close-line.svelte";
+export { default as RiKey2Line } from "remixicon-icon/key-2-line.svelte";
+export { default as RiShieldCheckLine } from "remixicon-icon/shield-check-line.svelte";
+export { default as RiDeleteBinLine } from "remixicon-icon/delete-bin-line.svelte";
+export { default as RiErrorWarningLine } from "remixicon-icon/error-warning-line.svelte";
 export { default as RiCompass3Fill } from "remixicon-icon/compass-3-fill.svelte";
 export { default as RiCompass3Line } from "remixicon-icon/compass-3-line.svelte";
 export { default as RiDashboardLine } from "remixicon-icon/dashboard-line.svelte";
@@ -19,6 +23,7 @@ export { default as RiImageAddLine } from "remixicon-icon/image-add-line.svelte"
 export { default as RiEmotionSadLine } from "remixicon-icon/emotion-sad-line.svelte";
 export { default as RiEqualizerLine } from "remixicon-icon/equalizer-line.svelte";
 export { default as RiExternalLinkLine } from "remixicon-icon/external-link-line.svelte";
+export { default as RiLinksLine } from "remixicon-icon/links-line.svelte";
 export { default as RiFileList3Line } from "remixicon-icon/file-list-3-line.svelte";
 export { default as RiFileMusicLine } from "remixicon-icon/file-music-line.svelte";
 export { default as RiFolder3Line } from "remixicon-icon/folder-3-line.svelte";

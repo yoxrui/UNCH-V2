@@ -3,6 +3,7 @@
   import SiteFooter from "$lib/components/site-footer.svelte";
   import CoverArt from "$lib/components/cover-art.svelte";
   import ChartCard from "$lib/components/chart-card.svelte";
+  import ChartSkeleton from "$lib/components/chart-skeleton.svelte";
   import FormattedText from "$lib/components/formatted-text.svelte";
   import { cn } from "$lib/utils.js";
   import { compact, plural, bannerGradient, profileUrl, bannerUrl } from "$lib/data/index.js";
@@ -10,9 +11,6 @@
 
   let { data } = $props();
   const account = $derived(data.account);
-  const charts = $derived(data.charts);
-  const totalLikes = $derived(charts.reduce((sum, c) => sum + c.like_count, 0));
-  const staffPicks = $derived(charts.filter((c) => c.staff_pick).length);
 </script>
 
 <svelte:head>
@@ -45,7 +43,6 @@
         class="pointer-events-none absolute inset-x-0 bottom-0 h-12 backdrop-blur-md"
         style="mask-image: linear-gradient(to top, black, transparent); -webkit-mask-image: linear-gradient(to top, black, transparent);"
       ></div>
-      <!-- Desktop: fade the banner into the card at the bottom -->
       <div
         class="from-card pointer-events-none absolute inset-x-0 bottom-0 hidden h-20 bg-linear-to-t to-transparent sm:block"
       ></div>
@@ -81,23 +78,29 @@
             <FormattedText text={account.description} />
           </p>
         {/if}
-        <div class="text-muted-foreground flex items-center gap-4 text-sm tabular-nums">
-          <span class="inline-flex items-center gap-1.5">
-            <RiStackLine class="size-4" /><span class="text-foreground font-semibold"
-              >{charts.length}</span
-            > {plural(charts.length, "chart")}
-          </span>
-          <span class="inline-flex items-center gap-1.5">
-            <RiHeart3Fill class="size-4 text-rose-400" /><span class="text-foreground font-semibold"
-              >{compact(totalLikes)}</span
-            > {plural(totalLikes, "like")}
-          </span>
-          {#if staffPicks > 0}
-            <span class="inline-flex items-center gap-1.5 text-amber-500">
-              <RiStarFill class="size-4" />{staffPicks} staff
+        {#await data.charts}
+          <div class="bg-muted h-5 w-40 animate-pulse rounded"></div>
+        {:then charts}
+          {@const totalLikes = charts.reduce((sum, c) => sum + c.like_count, 0)}
+          {@const staffPicks = charts.filter((c) => c.staff_pick).length}
+          <div class="text-muted-foreground flex items-center gap-4 text-sm tabular-nums">
+            <span class="inline-flex items-center gap-1.5">
+              <RiStackLine class="size-4" /><span class="text-foreground font-semibold"
+                >{charts.length}</span
+              > {plural(charts.length, "chart")}
             </span>
-          {/if}
-        </div>
+            <span class="inline-flex items-center gap-1.5">
+              <RiHeart3Fill class="size-4 text-rose-400" /><span class="text-foreground font-semibold"
+                >{compact(totalLikes)}</span
+              > {plural(totalLikes, "like")}
+            </span>
+            {#if staffPicks > 0}
+              <span class="inline-flex items-center gap-1.5 text-amber-500">
+                <RiStarFill class="size-4" />{staffPicks} staff
+              </span>
+            {/if}
+          </div>
+        {/await}
       </div>
     </div>
   </section>
@@ -105,23 +108,31 @@
   <!-- Their charts -->
   <section class="space-y-4">
     <h2 class="font-heading text-lg font-semibold tracking-tight">Charts</h2>
-    {#if charts.length}
+    {#await data.charts}
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-        {#each charts as chart (chart.id)}
-          <ChartCard {chart} />
+        {#each Array(6) as _, i (i)}
+          <ChartSkeleton />
         {/each}
-        <a
-          href={`/browse?sonolus_handle_is=${account.sonolus_handle}`}
-          class="bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted grid min-h-44 place-items-center rounded-2xl border border-dashed transition-colors"
-        >
-          <span class="font-heading text-base font-semibold">View All</span>
-        </a>
       </div>
-    {:else}
-      <p class="text-muted-foreground rounded-2xl border border-dashed py-16 text-center text-sm">
-        No public charts yet.
-      </p>
-    {/if}
+    {:then charts}
+      {#if charts.length}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          {#each charts as chart (chart.id)}
+            <ChartCard {chart} />
+          {/each}
+          <a
+            href={`/browse?sonolus_handle_is=${account.sonolus_handle}`}
+            class="bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted grid min-h-44 place-items-center rounded-2xl border border-dashed transition-colors"
+          >
+            <span class="font-heading text-base font-semibold">View All</span>
+          </a>
+        </div>
+      {:else}
+        <p class="text-muted-foreground rounded-2xl border border-dashed py-16 text-center text-sm">
+          No public charts yet.
+        </p>
+      {/if}
+    {/await}
   </section>
 </main>
 

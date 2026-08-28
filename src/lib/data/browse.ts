@@ -38,7 +38,7 @@ export type Filters = {
 };
 
 export const defaultFilters: Filters = {
-  searchType: "quick",
+  searchType: "newest",
   staffPick: false,
   sortBy: "decaying_likes",
   sortOrder: "desc",

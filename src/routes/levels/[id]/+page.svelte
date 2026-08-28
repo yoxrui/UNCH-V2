@@ -9,6 +9,7 @@
   import Pager from "$lib/components/pager.svelte";
   import Waveform from "$lib/components/waveform.svelte";
   import ChartSection from "$lib/components/chart-section.svelte";
+  import ChartSkeleton from "$lib/components/chart-skeleton.svelte";
   import FormattedText from "$lib/components/formatted-text.svelte";
   import { cn } from "$lib/utils.js";
   import {
@@ -353,7 +354,17 @@
     </div>
     <p class="text-muted-foreground text-xs">{leaderboardMeta[lbType].blurb}</p>
 
-    {#if !lbLoading && lb.data.length === 0}
+    {#if lbLoading}
+      <div class="space-y-1.5">
+        {#each Array(5) as _, i (i)}
+          <div class="bg-card/60 ring-border/50 flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1">
+            <div class="bg-muted size-8 shrink-0 animate-pulse rounded-full"></div>
+            <div class="bg-muted h-3.5 flex-1 animate-pulse rounded"></div>
+            <div class="bg-muted h-3.5 w-16 shrink-0 animate-pulse rounded"></div>
+          </div>
+        {/each}
+      </div>
+    {:else if lb.data.length === 0}
       <div
         class="text-muted-foreground flex flex-col items-center gap-2 rounded-2xl border border-dashed py-14 text-sm"
       >
@@ -373,7 +384,20 @@
       <span class="text-muted-foreground font-normal tabular-nums">· {chart.comment_count}</span>
     </h2>
 
-    {#if !cmLoading && cm.data.length === 0}
+    {#if cmLoading}
+      <div class="bg-card space-y-5 rounded-2xl border p-4 sm:p-5">
+        {#each Array(3) as _, i (i)}
+          <div class="flex gap-3">
+            <div class="bg-muted size-9 shrink-0 animate-pulse rounded-full"></div>
+            <div class="flex-1 space-y-2 py-1">
+              <div class="bg-muted h-3 w-32 animate-pulse rounded"></div>
+              <div class="bg-muted h-3 w-full animate-pulse rounded"></div>
+              <div class="bg-muted h-3 w-2/3 animate-pulse rounded"></div>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {:else if cm.data.length === 0}
       <div
         class="text-muted-foreground flex flex-col items-center gap-2 rounded-2xl border border-dashed py-14 text-sm"
       >
@@ -389,9 +413,22 @@
   </section>
 
   <!-- Related -->
-  {#if data.related.length}
-    <ChartSection title="Related charts" charts={data.related} carousel />
-  {/if}
+  {#await data.related}
+    <section class="space-y-5">
+      <h2 class="font-heading text-lg font-semibold tracking-tight">Related charts</h2>
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {#each Array(4) as _, i (i)}
+          <div class={i >= 2 ? "hidden lg:block" : i >= 1 ? "hidden sm:block" : ""}>
+            <ChartSkeleton />
+          </div>
+        {/each}
+      </div>
+    </section>
+  {:then related}
+    {#if related.length}
+      <ChartSection title="Related charts" charts={related} carousel />
+    {/if}
+  {/await}
 </main>
 
 <SiteFooter />

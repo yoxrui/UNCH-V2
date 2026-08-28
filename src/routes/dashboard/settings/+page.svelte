@@ -5,6 +5,7 @@
   import ImageCropper from "$lib/components/image-cropper.svelte";
   import EmojiTextarea from "$lib/components/emoji-textarea.svelte";
   import DifficultyBadge from "$lib/components/difficulty-badge.svelte";
+  import AuthorizedApps from "$lib/components/authorized-apps.svelte";
   import { session } from "$lib/state/session.svelte";
   import { uploadProfileImage, uploadBanner, updateAccount } from "$lib/data/index.js";
   import { cn } from "$lib/utils.js";
@@ -299,6 +300,8 @@
 
     <p class="text-muted-foreground text-xs">Accent changes apply live but reset on reload.</p>
   </section>
+
+  <AuthorizedApps />
 </main>
 
 <!-- Upload + crop modal -->

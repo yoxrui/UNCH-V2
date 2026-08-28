@@ -49,7 +49,6 @@
     clamp();
   }
 
-  // Re-fit when the zoom changes.
   $effect(() => {
     zoom;
     clamp();
@@ -74,7 +73,7 @@
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
-      // ignore
+      void 0;
     }
   }
 
@@ -119,7 +118,6 @@
       class="absolute max-w-none cursor-grab select-none active:cursor-grabbing"
       style={`left:${ox}px;top:${oy}px;width:${dispW}px;height:${dispH}px`}
     />
-    <!-- Editor grid overlay (rule of thirds) -->
     <div class="pointer-events-none absolute inset-0 {round ? 'rounded-full' : 'rounded-xl'} ring-1 ring-white/40">
       <div class="absolute inset-y-0 left-1/3 w-px bg-white/30"></div>
       <div class="absolute inset-y-0 left-2/3 w-px bg-white/30"></div>

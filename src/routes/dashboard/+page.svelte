@@ -1,5 +1,6 @@
 <script lang="ts">
   import OwnerChartCard from "$lib/components/owner-chart-card.svelte";
+  import ChartSkeleton from "$lib/components/chart-skeleton.svelte";
   import CoverArt from "$lib/components/cover-art.svelte";
   import Button from "$lib/components/button.svelte";
   import Select from "$lib/components/select.svelte";
@@ -145,7 +146,13 @@
       </button>
     </div>
 
-    {#if !loading && myCharts.length === 0}
+    {#if loading}
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {#each Array(6) as _, i (i)}
+          <ChartSkeleton />
+        {/each}
+      </div>
+    {:else if myCharts.length === 0}
       {#if search.trim() || status !== "ALL"}
         <div
           class="text-muted-foreground flex flex-col items-center gap-2 rounded-2xl border border-dashed py-16 text-center text-sm"

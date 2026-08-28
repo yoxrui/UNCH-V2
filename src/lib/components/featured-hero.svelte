@@ -119,11 +119,13 @@
                   </p>
                 </div>
 
-                {#if current.description}
-                  <p class="text-featured-foreground/70 hidden max-w-2xl text-sm leading-relaxed sm:line-clamp-2 sm:block">
-                    <FormattedText text={current.description} />
-                  </p>
-                {/if}
+                <div class="hidden sm:block sm:h-11">
+                  {#if current.description}
+                    <p class="text-featured-foreground/70 line-clamp-2 max-w-2xl text-sm leading-snug">
+                      <FormattedText text={current.description} />
+                    </p>
+                  {/if}
+                </div>
 
                 {#if current.tags.length}
                   <div class="hidden flex-wrap gap-1.5 sm:flex">

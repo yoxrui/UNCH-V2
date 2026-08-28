@@ -23,8 +23,22 @@
     </p>
   </header>
 
+  {#await data.charters}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {#each Array(6) as _, i (i)}
+        <div class="bg-card ring-border/70 flex items-center gap-3.5 rounded-2xl p-4 ring-1">
+          <div class="bg-muted size-14 shrink-0 animate-pulse rounded-2xl"></div>
+          <div class="flex-1 space-y-2">
+            <div class="bg-muted h-4 w-2/3 animate-pulse rounded"></div>
+            <div class="bg-muted h-3 w-1/3 animate-pulse rounded"></div>
+            <div class="bg-muted h-3 w-1/2 animate-pulse rounded"></div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {:then charters}
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {#each data.charters as c (c.account.sonolus_id)}
+    {#each charters as c (c.account.sonolus_id)}
       <article
         class="group bg-card hover:ring-primary/40 relative flex items-center gap-3.5 rounded-2xl p-4 ring-1 ring-border/70 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       >
@@ -73,6 +87,7 @@
       </article>
     {/each}
   </div>
+  {/await}
 </main>
 
 <SiteFooter />

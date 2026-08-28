@@ -37,6 +37,28 @@
       <p class="text-xs leading-relaxed">
         A community catalog of Sonolus rhythm-game fan-charts.
       </p>
+      <a
+        href="https://open.sonolus.com/untitledcharts.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90"
+        style="background: #000; border: 1px solid rgba(255,255,255,0.1)"
+      >
+        <svg
+          fill="currentColor"
+          aria-hidden="true"
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M6 4a2 2 0 0 0-2 2v8c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-2.5a.5.5 0 0 1 1 0V14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h2.5a.5.5 0 0 1 0 1H6Zm5-.5c0-.28.22-.5.5-.5h5c.28 0 .5.22.5.5v5a.5.5 0 0 1-1 0V4.7l-4.15 4.15a.5.5 0 0 1-.7-.7L15.29 4H11.5a.5.5 0 0 1-.5-.5Z"
+            fill="currentColor"
+          ></path>
+        </svg>
+        Open in Sonolus
+      </a>
     </div>
 
     <div class="flex gap-12">

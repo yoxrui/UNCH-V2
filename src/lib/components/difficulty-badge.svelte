@@ -14,12 +14,11 @@
 
 <span
   class={cn(
-    "inline-flex items-center gap-1.5 rounded-md border font-bold tracking-wide whitespace-nowrap backdrop-blur",
+    "inline-flex items-center rounded-md border font-bold tracking-wide whitespace-nowrap backdrop-blur",
     size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs",
     meta.badge,
     className,
   )}
 >
-  <span class={cn("badge-dot size-1.5 rounded-full", meta.dot)}></span>
   Lv.{level ?? "?"}
 </span>
