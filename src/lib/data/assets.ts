@@ -18,12 +18,28 @@ export function bgmUrl(chart: Chart): string | null {
   return assetUrl(chart.author, chart.id, chart.music_file_hash);
 }
 
+// Short preview clip if the charter uploaded one, otherwise the full song. Goes through the
+// proxy because the waveform has to decode it, and the CDN doesn't send CORS headers.
+export function previewProxyUrl(chart: Chart): string | null {
+  const url = assetUrl(chart.author, chart.id, chart.preview_file_hash) ?? bgmUrl(chart);
+  return url ? `/api/audio-proxy?url=${encodeURIComponent(url)}` : null;
+}
+
+export function chartFileUrl(chart: Chart): string | null {
+  return assetUrl(chart.author, chart.id, chart.chart_file_hash);
+}
+
 export function backgroundUrl(chart: Chart): string | null {
   return assetUrl(chart.author, chart.id, chart.background_file_hash) ?? coverUrl(chart);
 }
 
 export function bgmProxyUrl(chart: Chart): string | null {
   const url = bgmUrl(chart);
+  return url ? `/api/audio-proxy?url=${encodeURIComponent(url)}` : null;
+}
+
+export function chartFileProxyUrl(chart: Chart): string | null {
+  const url = chartFileUrl(chart);
   return url ? `/api/audio-proxy?url=${encodeURIComponent(url)}` : null;
 }
 

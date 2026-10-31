@@ -1,7 +1,6 @@
 import type {
   Account,
   Chart,
-  CharterSummary,
   Comment,
   ScoreEntry,
   Trends,
@@ -59,6 +58,9 @@ export function mapChart(r: RawChart): Chart {
     music_file_hash: str(r.music_file_hash),
     background_file_hash:
       str(r.background_file_hash) || str(r.background_v3_file_hash) || str(r.background_v1_file_hash),
+    chart_file_hash: str(r.chart_file_hash),
+    preview_file_hash: str(r.preview_file_hash),
+    custom_background: !!str(r.background_file_hash),
   };
 }
 
@@ -101,7 +103,6 @@ export async function fetchChart(
   return raw && raw.id ? mapChart(raw) : null;
 }
 
-/** The signed-in user's own charts (all statuses). `sessionKey` identifies the user. */
 export async function fetchMyCharts(
   fetchFn: Fetch,
   sessionKey: string,
@@ -180,7 +181,6 @@ export async function uploadChart(
         try {
           msg = (await res.text()) || msg;
         } catch {
-          // keep default
         }
       }
       return { ok: false, error: msg };
@@ -289,7 +289,6 @@ export async function editChart(
         try {
           msg = (await res.text()) || msg;
         } catch {
-          // keep default
         }
       }
       return { ok: false, error: msg };
@@ -345,45 +344,6 @@ export async function fetchAccountByHandle(
   return { account, charts: list.data };
 }
 
-export async function fetchCharters(fetchFn: Fetch, limit = 100): Promise<CharterSummary[]> {
-  const res = await fetchCharts(fetchFn, {
-    type: "advanced",
-    sort_by: "likes",
-    sort_order: "desc",
-    limit,
-  });
-
-  const byHandle = new Map<number, CharterSummary>();
-  for (const c of res.data) {
-    if (!c.author_handle) continue;
-    let entry = byHandle.get(c.author_handle);
-    if (!entry) {
-      entry = {
-        account: {
-          sonolus_id: c.author,
-          sonolus_handle: c.author_handle,
-          sonolus_username: c.author_full.split("#")[0] || "Unknown",
-          profile_hash: null,
-          banner_hash: null,
-          description: null,
-          mod: false,
-          admin: false,
-          banned: false,
-        },
-        chartCount: 0,
-        totalLikes: 0,
-        staffPicks: 0,
-      };
-      byHandle.set(c.author_handle, entry);
-    }
-    entry.chartCount += 1;
-    entry.totalLikes += c.like_count;
-    if (c.staff_pick) entry.staffPicks += 1;
-  }
-
-  return [...byHandle.values()].sort((a, b) => b.totalLikes - a.totalLikes);
-}
-
 function mapComment(r: Record<string, unknown>): Comment {
   return {
     id: num(r.id),
@@ -431,6 +391,8 @@ function mapScore(r: Record<string, unknown>): ScoreEntry {
     display_name: str(r.display_name),
     account: mapAccount(r.account as Record<string, unknown>),
     created_at: str(r.created_at),
+    chart_id: str(r.chart_id),
+    replay_data_hash: typeof r.replay_data_hash === "string" ? r.replay_data_hash : null,
   };
 }
 
@@ -448,4 +410,52 @@ export async function fetchLeaderboard(
   if (!json) return { data: [], pageCount: 1 };
   const data = Array.isArray(json.data) ? (json.data as Record<string, unknown>[]).map(mapScore) : [];
   return { data, pageCount: num(json.pageCount, 1) };
+}
+
+// There's no single-score endpoint, so walk the chart's leaderboard until the id shows up.
+// The API only allows limit=3 or limit=10.
+export async function findScore(
+  fetchFn: Fetch,
+  chartId: string,
+  scoreId: number,
+  maxPages = 30,
+): Promise<ScoreEntry | null> {
+  for (let page = 0; page < maxPages; page++) {
+    const { data, pageCount } = await fetchLeaderboard(fetchFn, chartId, "arcade_score_speed", page, 10);
+    const hit = data.find((e) => e.id === scoreId);
+    if (hit) return hit;
+    if (page + 1 >= pageCount) break;
+  }
+  return null;
+}
+
+export function replayName(chartId: string, scoreId: number): string {
+  return `UnCh-${chartId}-${scoreId}`;
+}
+
+export async function fetchAccountById(fetchFn: Fetch, id: string): Promise<Account | null> {
+  const j = await getJson(fetchFn, `${API_URL}/api/accounts/${id}`);
+  if (!j) return null;
+  const raw = (j.account ?? j) as Record<string, unknown>;
+  return raw && raw.sonolus_id ? mapAccount(raw) : null;
+}
+
+export type AccountStats = {
+  chartsPublished: number;
+  likesReceived: number;
+  commentsReceived: number;
+  likedCharts: number;
+  commentsWritten: number;
+};
+
+export async function fetchAccountStats(fetchFn: Fetch, id: string): Promise<AccountStats | null> {
+  const j = await getJson(fetchFn, `${API_URL}/api/accounts/${id}/stats`);
+  if (!j) return null;
+  return {
+    chartsPublished: num(j.charts_published),
+    likesReceived: num(j.likes_received),
+    commentsReceived: num(j.comments_received),
+    likedCharts: num(j.liked_charts_count),
+    commentsWritten: num(j.comments_count),
+  };
 }

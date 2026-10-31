@@ -1,11 +1,9 @@
-/* Order cascade layers so Tailwind `utilities` win over DaisyUI component
-   classes (`.btn`, `.carousel-item`, …). Must be declared before the imports. */
 @layer theme, base, components, daisyui, utilities;
 
 @import "tailwindcss";
-@import "@fontsource-variable/geist";
-@import "@fontsource-variable/roboto";
-@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/unbounded";
+@import "@fontsource/zen-kaku-gothic-new/400.css";
+@import "@fontsource/zen-kaku-gothic-new/700.css";
 
 @plugin "daisyui" {
   themes: false;
@@ -13,47 +11,49 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Blue with a Miku-teal accent, dark first. --primary (blue) carries actions and selection,
+  --accent (teal) carries links, charter names and highlights. Accent presets in settings
+  only swap --primary.
+*/
 :root {
-  --bg: #ffffff;
-  --fg: #0f172a;
-  --background: oklch(0.995 0.004 262);
-  --foreground: oklch(0.145 0.008 262);
+  --background: oklch(0.975 0.008 235);
+  --foreground: oklch(0.23 0.035 252);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.008 262);
+  --card-foreground: oklch(0.23 0.035 252);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.008 262);
-  --primary: oklch(0.457 0.24 262);
-  --primary-foreground: oklch(0.962 0.018 262);
-  --secondary: oklch(0.967 0.006 262);
-  --secondary-foreground: oklch(0.21 0.02 262);
-  --muted: oklch(0.96 0.008 262);
-  --muted-foreground: oklch(0.542 0.034 262);
-  --accent: oklch(0.457 0.24 262);
-  --accent-foreground: oklch(0.962 0.018 262);
-  --destructive: oklch(0.577 0.245 27.325);
-  --bc: oklch(0.922 0.012 262);
-  --input: oklch(0.922 0.012 262);
-  --ring: oklch(0.711 0.019 262);
-  --chart-1: oklch(0.833 0.12 262);
-  --chart-2: oklch(0.667 0.21 262);
-  --chart-3: oklch(0.591 0.24 262);
-  --chart-4: oklch(0.518 0.253 262);
-  --chart-5: oklch(0.452 0.211 262);
-  --radius: 0.875rem;
-  --sidebar: oklch(0.985 0.006 262);
-  --sidebar-foreground: oklch(0.145 0.008 262);
-  --sidebar-primary: oklch(0.511 0.262 262);
-  --sidebar-primary-foreground: oklch(0.962 0.018 262);
-  --sidebar-accent: oklch(0.96 0.008 262);
-  --sidebar-accent-foreground: oklch(0.212 0.019 262);
-  --sidebar-border: oklch(0.922 0.012 262);
-  --sidebar-ring: oklch(0.711 0.019 262);
-  --featured: oklch(0.93 0.04 200);
-  --featured-foreground: oklch(0.205 0.04 220);
+  --popover-foreground: oklch(0.23 0.035 252);
+  --primary: oklch(0.58 0.16 245);
+  --primary-foreground: oklch(0.98 0.01 252);
+  --secondary: oklch(0.945 0.013 235);
+  --secondary-foreground: oklch(0.23 0.035 252);
+  --muted: oklch(0.945 0.013 235);
+  --muted-foreground: oklch(0.5 0.03 245);
+  --accent: oklch(0.56 0.1 190);
+  --accent-foreground: oklch(0.98 0.01 190);
+  --destructive: oklch(0.58 0.21 25);
+  --bc: oklch(0.9 0.014 235);
+  --input: oklch(0.88 0.016 235);
+  --ring: oklch(0.58 0.16 245);
+  --chart-1: oklch(0.85 0.08 200);
+  --chart-2: oklch(0.75 0.12 195);
+  --chart-3: oklch(0.65 0.15 230);
+  --chart-4: oklch(0.58 0.16 245);
+  --chart-5: oklch(0.48 0.14 245);
+  --radius: 0.95rem;
+  --sidebar: oklch(0.96 0.01 235);
+  --sidebar-foreground: oklch(0.23 0.035 252);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.945 0.013 235);
+  --sidebar-accent-foreground: oklch(0.23 0.035 252);
+  --sidebar-border: oklch(0.9 0.014 235);
+  --sidebar-ring: var(--primary);
+  --featured: oklch(0.2 0.035 252);
+  --featured-foreground: oklch(0.97 0.01 230);
 
-  /* daisyUI v5 theme — mapped onto the existing design tokens so components
-     inherit the app's colors. Because these reference the tokens above (which
-     `.dark` re-defines), class-based dark mode keeps working with no duplication. */
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.25, 1);
+
   --color-base-100: var(--card);
   --color-base-200: var(--muted);
   --color-base-300: var(--secondary);
@@ -66,58 +66,50 @@
   --color-accent-content: var(--accent-foreground);
   --color-neutral: var(--secondary);
   --color-neutral-content: var(--secondary-foreground);
-  --color-info: oklch(0.7 0.14 233);
-  --color-info-content: oklch(0.98 0.01 233);
-  --color-success: oklch(0.72 0.16 152);
-  --color-success-content: oklch(0.98 0.01 152);
-  --color-warning: oklch(0.82 0.16 84);
-  --color-warning-content: oklch(0.28 0.06 84);
+  --color-info: oklch(0.7 0.13 220);
+  --color-info-content: oklch(0.2 0.04 220);
+  --color-success: oklch(0.72 0.15 160);
+  --color-success-content: oklch(0.2 0.05 160);
+  --color-warning: oklch(0.82 0.15 85);
+  --color-warning-content: oklch(0.28 0.06 85);
   --color-error: var(--destructive);
-  --color-error-content: var(--primary-foreground);
-  --radius-selector: 0.5rem;
+  --color-error-content: oklch(0.98 0.01 25);
+  --radius-selector: 999px;
   --radius-field: var(--radius);
-  --radius-box: var(--radius);
+  --radius-box: calc(var(--radius) * 1.6);
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 1;
+  --depth: 0;
   --noise: 0;
 }
 
 .dark {
-  --background: oklch(0.145 0.008 326);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.212 0.019 262);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.212 0.019 262);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.398 0.195 262);
-  --primary-foreground: oklch(0.962 0.018 262);
-  --secondary: oklch(0.274 0.02 262);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.263 0.024 262);
-  --muted-foreground: oklch(0.711 0.019 262);
-  --accent: oklch(0.398 0.195 262);
-  --accent-foreground: oklch(0.962 0.018 262);
-  --destructive: oklch(0.704 0.191 22.216);
-  --bc: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.542 0.034 262);
-  --chart-1: oklch(0.833 0.12 262);
-  --chart-2: oklch(0.667 0.21 262);
-  --chart-3: oklch(0.591 0.24 262);
-  --chart-4: oklch(0.518 0.253 262);
-  --chart-5: oklch(0.452 0.211 262);
-  --sidebar: oklch(0.212 0.019 262);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.585 0.233 262);
-  --sidebar-primary-foreground: oklch(0.962 0.018 262);
-  --sidebar-accent: oklch(0.263 0.024 262);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.542 0.034 262);
-  --featured: oklch(0.28 0.045 215);
-  --featured-foreground: oklch(0.97 0 0);
+  --background: oklch(0.165 0.03 245);
+  --foreground: oklch(0.96 0.01 230);
+  --card: oklch(0.21 0.032 245);
+  --card-foreground: oklch(0.96 0.01 230);
+  --popover: oklch(0.23 0.032 245);
+  --popover-foreground: oklch(0.96 0.01 230);
+  --primary: oklch(0.67 0.155 243);
+  --primary-foreground: oklch(0.98 0.01 252);
+  --secondary: oklch(0.26 0.032 245);
+  --secondary-foreground: oklch(0.96 0.01 230);
+  --muted: oklch(0.26 0.032 245);
+  --muted-foreground: oklch(0.73 0.03 240);
+  --accent: oklch(0.8 0.12 188);
+  --accent-foreground: oklch(0.2 0.04 190);
+  --destructive: oklch(0.7 0.18 25);
+  --bc: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.67 0.155 243);
+  --sidebar: oklch(0.19 0.03 245);
+  --sidebar-foreground: oklch(0.96 0.01 230);
+  --sidebar-accent: oklch(0.26 0.032 245);
+  --sidebar-accent-foreground: oklch(0.96 0.01 230);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --featured: oklch(0.13 0.03 245);
+  --featured-foreground: oklch(0.97 0.01 230);
 }
 
 @theme inline {
@@ -160,15 +152,13 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: 'Roboto Variable', sans-serif;
+  --font-sans: 'Zen Kaku Gothic New', sans-serif;
 
-  --font-heading: 'Instrument Sans Variable', sans-serif;
+  --font-heading: 'Unbounded Variable', 'Zen Kaku Gothic New', sans-serif;
 
-  --radius-2xl: calc(var(--radius) * 1.8);
-
-  --radius-3xl: calc(var(--radius) * 2.2);
-
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-3xl: calc(var(--radius) * 1.85);
+  --radius-4xl: calc(var(--radius) * 2.2);
 }
 
 @layer base {
@@ -201,12 +191,14 @@ body {
 
 a { color: inherit; }
 
-/* utility */
-.container { max-width: 960px; margin: 0 auto; padding: 1rem; }
+/* Unbounded runs heavy; one step lighter than the requested weight reads right. */
+.font-heading {
+  letter-spacing: -0.01em;
+}
+.font-heading:is(.font-bold, .font-extrabold, .font-black) {
+  font-weight: 620;
+}
 
-/* --- osu-like micro-interactions ------------------------------------- */
-
-/* Difficulty-badge dot: a subtle "approach circle" pulse while its card is hovered. */
 @keyframes badge-pulse {
   0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
   70% { box-shadow: 0 0 0 5px transparent; }
@@ -216,7 +208,6 @@ a { color: inherit; }
   animation: badge-pulse 0.9s ease-out;
 }
 
-/* One-shot heart pop on hover (display-only feedback). */
 @keyframes heart-pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.3); }
@@ -231,4 +222,8 @@ a { color: inherit; }
   .heart-pop:hover {
     animation: none;
   }
+}
+
+.checkbox {
+  border-radius: 0.25rem;
 }

@@ -1,10 +1,6 @@
-/** Presentation helpers — turn API-shaped data into display values. */
-import type { LeaderboardType } from "./types.js";
+import { i18n, t, localized } from "$lib/i18n.svelte.js";
 
-/* ------------------------------------------------------------------ *
- * Difficulty (derived from `tags` + `rating` — the API has no explicit
- * difficulty field, only free-form tags and an integer rating).
- * ------------------------------------------------------------------ */
+import type { LeaderboardType } from "./types.js";
 
 export const DIFFICULTIES = [
   "EASY",
@@ -16,7 +12,6 @@ export const DIFFICULTIES = [
 ] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
-/** PJSK-flavoured colour language for each difficulty (badge / dot / ring). */
 export const difficultyMeta: Record<
   Difficulty,
   { badge: string; dot: string; ring: string }
@@ -63,7 +58,6 @@ const TAG_TOKENS: { re: RegExp; d: Difficulty }[] = [
   { re: /^(easy|ez|esy)$/i, d: "EASY" },
 ];
 
-/** Best-effort difficulty: a known tag token wins, else fall back on rating. */
 export function difficultyFromTags(tags: string[], rating: number): Difficulty {
   for (const tag of tags) {
     const hit = TAG_TOKENS.find((t) => t.re.test(tag.trim()));
@@ -77,24 +71,21 @@ export function difficultyFromTags(tags: string[], rating: number): Difficulty {
   return "EASY";
 }
 
-/* ------------------------------------------------------------------ *
- * Numbers & time
- * ------------------------------------------------------------------ */
+const compactFormatters = new Map<string, Intl.NumberFormat>();
 
-/** 13 -> "13", 2823 -> "2.8k", 1_200_000 -> "1.2m". */
+// 12.8K in English, 1.3万 in Japanese, etc.
 export function compact(n: number): string {
-  if (n < 1000) return `${n}`;
-  if (n < 1_000_000) {
-    const v = n / 1000;
-    return `${v >= 100 ? Math.round(v) : v.toFixed(1).replace(/\.0$/, "")}k`;
+  const locale = i18n.locale;
+  let f = compactFormatters.get(locale);
+  if (!f) {
+    f = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
+    compactFormatters.set(locale, f);
   }
-  const v = n / 1_000_000;
-  return `${v.toFixed(1).replace(/\.0$/, "")}m`;
+  return localized(f.format(n));
 }
 
-/** Full grouped number, e.g. 998189 -> "998,189". */
 export function grouped(n: number): string {
-  return n.toLocaleString("en-US");
+  return localized(n.toLocaleString(i18n.locale));
 }
 
 export function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
@@ -110,33 +101,35 @@ const RELATIVE_DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[
   { amount: 12, unit: "month" },
   { amount: Number.POSITIVE_INFINITY, unit: "year" },
 ];
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+const formatters = new Map<string, Intl.RelativeTimeFormat>();
+function rtf(): Intl.RelativeTimeFormat {
+  const locale = i18n.locale;
+  let f = formatters.get(locale);
+  if (!f) {
+    f = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    formatters.set(locale, f);
+  }
+  return f;
+}
 
-/** "3 days ago" from an ISO string or epoch ms. `now` is injectable for tests. */
 export function relativeTime(input: string | number, now: number = Date.now()): string {
   const then = typeof input === "number" ? input : Date.parse(input);
   if (Number.isNaN(then)) return "";
   let duration = (then - now) / 1000;
   for (const division of RELATIVE_DIVISIONS) {
     if (Math.abs(duration) < division.amount) {
-      return rtf.format(Math.round(duration), division.unit);
+      return localized(rtf().format(Math.round(duration), division.unit));
     }
     duration /= division.amount;
   }
   return "";
 }
 
-/** mm:ss from seconds. */
 export function formatTime(sec: number): string {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
-
-/* ------------------------------------------------------------------ *
- * Gradient cover placeholders (no real asset path is known — see README).
- * Deterministic from the chart/account id so each one is stable & distinct.
- * ------------------------------------------------------------------ */
 
 const GRADIENTS = [
   "from-fuchsia-600 via-purple-700 to-indigo-900",
@@ -162,59 +155,33 @@ function hashString(s: string): number {
   return h >>> 0;
 }
 
-/** Stable Tailwind gradient classes for a given id. */
 export function coverGradient(id: string): string {
   return GRADIENTS[hashString(id) % GRADIENTS.length];
 }
 
-/** A distinct second gradient (for banners) from the same id. */
 export function bannerGradient(id: string): string {
   return GRADIENTS[(hashString(id) + 5) % GRADIENTS.length];
 }
 
-/* ------------------------------------------------------------------ *
- * Leaderboards
- * ------------------------------------------------------------------ */
+function lbMeta(type: LeaderboardType) {
+  return {
+    get label() {
+      return t(`leaderboard.${type}`);
+    },
+    get short() {
+      return t(`leaderboard.${type}`);
+    },
+  };
+}
 
-export const leaderboardMeta: Record<
-  LeaderboardType,
-  { label: string; short: string; blurb: string }
-> = {
-  arcade_score_speed: {
-    label: "Arcade Score",
-    short: "Arcade",
-    blurb: "Highest arcade score, speed modifiers allowed.",
-  },
-  arcade_score_no_speed: {
-    label: "Arcade (No Speed)",
-    short: "No-Speed",
-    blurb: "Highest arcade score with no speed modifiers.",
-  },
-  accuracy_score: {
-    label: "Accuracy",
-    short: "Accuracy",
-    blurb: "Highest accuracy score.",
-  },
-  rank_match: {
-    label: "Rank Match",
-    short: "Rank",
-    blurb: "Ranked competitive matches.",
-  },
-  least_combo_breaks: {
-    label: "Least Combo Breaks",
-    short: "Combo Breaks",
-    blurb: "Fewest combo breaks (great + good + miss).",
-  },
-  least_misses: {
-    label: "Least Misses",
-    short: "Misses",
-    blurb: "Fewest missed notes.",
-  },
-  perfect: {
-    label: "Most Perfect",
-    short: "Perfect",
-    blurb: "Most perfect judgments.",
-  },
+export const leaderboardMeta: Record<LeaderboardType, { label: string; short: string }> = {
+  arcade_score_speed: lbMeta("arcade_score_speed"),
+  arcade_score_no_speed: lbMeta("arcade_score_no_speed"),
+  accuracy_score: lbMeta("accuracy_score"),
+  rank_match: lbMeta("rank_match"),
+  least_combo_breaks: lbMeta("least_combo_breaks"),
+  least_misses: lbMeta("least_misses"),
+  perfect: lbMeta("perfect"),
 };
 
 export const gradeMeta: Record<string, { label: string; class: string }> = {
@@ -229,6 +196,10 @@ export const gradeMeta: Record<string, { label: string; class: string }> = {
   fullCombo: {
     label: "FC",
     class: "border-emerald-400/40 bg-emerald-400/15 text-emerald-600 dark:text-emerald-300",
+  },
+  pass: {
+    label: "Pass",
+    class: "border-sky-400/30 bg-sky-400/12 text-sky-600 dark:text-sky-300",
   },
   clear: {
     label: "Clear",
@@ -245,11 +216,6 @@ export function gradeBadge(grade: string) {
   );
 }
 
-/* ------------------------------------------------------------------ *
- * Description parsing (BPM / notes / combo sometimes live in free text —
- * the only place the API exposes them, per README). Best-effort only.
- * ------------------------------------------------------------------ */
-
 export type ParsedMeta = { bpm?: number; notes?: number; combo?: number };
 
 export function parseDescriptionMeta(description: string | null): ParsedMeta {
@@ -265,4 +231,9 @@ export function parseDescriptionMeta(description: string | null): ParsedMeta {
     notes: grab(/(?:note count|notes?)[:\s]*([\d,]+)/i),
     combo: grab(/combo(?:\s*count)?[:\s]*([\d,]+)/i),
   };
+}
+
+export function formatAccuracy(value: number): string {
+  const pct = value > 1000 ? value / 10000 : value <= 1 ? value * 100 : value;
+  return `${parseFloat(pct.toFixed(2))}%`;
 }

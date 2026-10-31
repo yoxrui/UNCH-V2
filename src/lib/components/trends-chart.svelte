@@ -1,13 +1,14 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { onMount } from "svelte";
 
   let {
     likes,
     comments,
-  }: { likes: number[]; comments: number[] } = $props();
+    compact = false,
+    class: className = "",
+  }: { likes: number[]; comments: number[]; compact?: boolean; class?: string } = $props();
 
-  // viewBox geometry (stroke kept constant via vector-effect, so non-uniform
-  // scaling to fill width is fine).
   const W = 700;
   const H = 220;
   const TOP = 16;
@@ -21,7 +22,6 @@
     }));
   }
 
-  /** Catmull–Rom → cubic bézier for a smooth line. */
   function smooth(values: number[]) {
     const pts = points(values);
     if (pts.length < 2) return "";
@@ -49,27 +49,30 @@
   onMount(() => (mounted = true));
 </script>
 
-<figure class="space-y-3">
-  <div class="text-muted-foreground flex items-center gap-4 text-xs">
+<figure class={compact ? `space-y-1 ${className}` : `space-y-3 ${className}`}>
+  <div class={compact ? "flex items-center gap-3 text-[11px]" : "text-muted-foreground flex items-center gap-4 text-xs"}>
     <span class="inline-flex items-center gap-1.5">
-      <span class="size-2 rounded-full bg-violet-500"></span> Likes
+      <span class="size-2 rounded-full bg-teal-400"></span> {t("levelDetail.likes")}
     </span>
     <span class="inline-flex items-center gap-1.5">
-      <span class="size-2 rounded-full bg-sky-500"></span> Comments
+      <span class="size-2 rounded-full bg-sky-500"></span> {t("levelDetail.comments")}
     </span>
-    <span class="ml-auto">recent activity · normalized 0–100</span>
+    {#if compact}
+      <span class="ml-auto">{t("levelDetail.activity")}</span>
+    {:else}
+      <span class="ml-auto">{t("levelDetail.activityLong")}</span>
+    {/if}
   </div>
 
   <div class="trends" class:is-mounted={mounted}>
     <svg
       viewBox="0 0 {W} {H}"
       preserveAspectRatio="none"
-      class="h-40 w-full sm:h-44"
+      class={compact ? "h-12 w-full" : "h-40 w-full sm:h-44"}
       role="img"
-      aria-label="Likes and comments trend over the recent activity window"
+      aria-label={t("levelDetail.activityAria")}
     >
-      <!-- gridlines -->
-      {#each [0, 50, 100] as g (g)}
+      {#each compact ? [] : [0, 50, 100] as g (g)}
         <line
           x1="0"
           x2={W}
@@ -82,7 +85,7 @@
       {/each}
 
       <path d={commentsArea} class="fill-sky-500/10" />
-      <path d={likesArea} class="fill-violet-500/15" />
+      <path d={likesArea} class="fill-teal-400/15" />
 
       <path
         d={commentsLine}
@@ -94,7 +97,7 @@
       />
       <path
         d={likesLine}
-        class="trend-line fill-none stroke-violet-500"
+        class="trend-line fill-none stroke-teal-400"
         stroke-width="2.5"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -105,7 +108,6 @@
 </figure>
 
 <style>
-  /* Draw-in on mount; instant for reduced-motion users. */
   .trend-line {
     stroke-dasharray: 1200;
     stroke-dashoffset: 1200;

@@ -1,10 +1,24 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
+  import LanguageSelect from "$lib/components/language-select.svelte";
+  import { prefs, setPref, loadPrefs, type DashboardCardStyle } from "$lib/state/preferences.svelte.js";
+  import { onMount } from "svelte";
+
+  const cardStyles: { value: DashboardCardStyle; label: string }[] = [
+    { value: "background", get label() { return t("settings.cardBackground"); } },
+    { value: "cover", get label() { return t("settings.cardCoverOnly"); } },
+  ];
+  let prefsMounted = $state(false);
+  onMount(() => {
+    loadPrefs();
+    prefsMounted = true;
+  });
   import Button from "$lib/components/button.svelte";
   import CoverArt from "$lib/components/cover-art.svelte";
   import Modal from "$lib/components/modal.svelte";
   import ImageCropper from "$lib/components/image-cropper.svelte";
   import EmojiTextarea from "$lib/components/emoji-textarea.svelte";
-  import DifficultyBadge from "$lib/components/difficulty-badge.svelte";
+  import LevelBadge from "$lib/components/level-badge.svelte";
   import AuthorizedApps from "$lib/components/authorized-apps.svelte";
   import { session } from "$lib/state/session.svelte";
   import { uploadProfileImage, uploadBanner, updateAccount } from "$lib/data/index.js";
@@ -22,9 +36,9 @@
   const user = $derived(session.user);
 
   const modes = [
-    { value: "light", label: "Light" },
-    { value: "dark", label: "Dark" },
-    { value: "system", label: "System" },
+    { value: "light", get label() { return t("header.light"); } },
+    { value: "dark", get label() { return t("header.dark"); } },
+    { value: "system", get label() { return t("header.system"); } },
   ] as const;
 
   let activeAccent = $state("Violet");
@@ -103,7 +117,7 @@
     const key = session.sessionKey;
     const id = user?.sonolus_id;
     if (!key || !id) {
-      errorMsg = "You must be logged in.";
+      errorMsg = t("settings.loginRequired");
       return;
     }
     saving = true;
@@ -127,7 +141,7 @@
       session.init();
       setTimeout(() => (justSaved = false), 1800);
     } else {
-      errorMsg = "Failed to save. Please try again.";
+      errorMsg = t("settings.saveFailed");
     }
   }
 
@@ -137,10 +151,11 @@
 </script>
 
 <svelte:head>
-  <title>Settings | UntitledCharts</title>
+  <title>{t("settings.settingsUntitledcharts")}</title>
 </svelte:head>
 
 <main class="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+  {#if session.isLoggedIn}
   <a
     href="/dashboard"
     class="text-muted-foreground hover:text-foreground group inline-flex items-center gap-1.5 text-sm transition-colors"
@@ -148,17 +163,17 @@
     <RiArrowLeftLine
       class="size-4 transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none"
     />
-    Dashboard
+    {t("nav.dashboard")}
   </a>
+  {/if}
 
   <header class="space-y-1">
-    <h1 class="font-heading text-2xl font-bold tracking-tight">Settings</h1>
-    <p class="text-muted-foreground text-sm">Manage your account and preferences.</p>
+    <h1 class="font-heading text-2xl font-bold tracking-tight">{t("settings.title")}</h1>
+    <p class="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
   </header>
 
-  <!-- Account -->
+  {#if session.isLoggedIn}
   <section class="bg-card ring-border/70 rounded-2xl border ring-1">
-    <!-- Banner -->
     <div class="relative overflow-hidden rounded-t-2xl">
       {#if bannerSrc}
         <div class="h-28 bg-cover bg-center sm:h-36" style={`background-image:url(${bannerSrc})`}></div>
@@ -170,12 +185,11 @@
         onclick={() => openPicker("banner")}
         class="bg-background/70 hover:bg-background absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur transition-colors"
       >
-        <RiImageEditLine class="size-4" /> Change background
+        <RiImageEditLine class="size-4" /> {t("settings.changeBackground")}
       </button>
     </div>
 
     <div class="px-5 pb-5">
-      <!-- Only the avatar overlaps the banner; text sits below to avoid clashing with the image -->
       <div class="-mt-10 w-fit">
         <div class="relative">
           <CoverArt
@@ -188,7 +202,7 @@
           <button
             type="button"
             onclick={() => openPicker("pfp")}
-            aria-label="Change profile picture"
+            aria-label={t("settings.changeProfilePicture")}
             class="bg-primary text-primary-foreground absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full shadow-md transition-transform hover:scale-105"
           >
             <RiImageEditLine class="size-4" />
@@ -202,12 +216,12 @@
       </div>
 
       <div class="mt-5 space-y-1.5">
-        <span class="text-muted-foreground text-xs font-medium">Description</span>
+        <span class="text-muted-foreground text-xs font-medium">{t("levelDetail.description")}</span>
         <EmojiTextarea
           bind:value={description}
           rows={4}
           maxlength={2000}
-          placeholder="Tell people about your charts… type : for emojis"
+          placeholder={t("settings.tellPeopleAboutYourCharts")}
           class="bg-card focus-visible:ring-ring/50 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus-visible:ring-2"
         />
         <span class="text-muted-foreground block text-right text-[11px] tabular-nums">{description.length}/2000</span>
@@ -225,16 +239,22 @@
             justSaved && "!border-emerald-500 !bg-emerald-500 !text-white",
           )}
         >
-          {saving ? "Saving…" : justSaved ? "Saved!" : "Save changes"}
+          {saving ? t("edit.saving") : justSaved ? t("settings.saved") : t("edit.saveChanges")}
         </Button>
       </div>
     </div>
   </section>
+  {:else if !session.loading}
+    <section class="bg-card ring-border/70 flex flex-col items-start gap-3 rounded-2xl border p-5 ring-1 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-muted-foreground text-sm">{t("settings.accountSignedOut")}</p>
+      <Button size="sm" class="shrink-0 rounded-full" onclick={() => session.login()}>{t("nav.login")}</Button>
+    </section>
+  {/if}
 
   <section class="bg-card ring-border/70 space-y-3 rounded-2xl border p-5 ring-1">
     <div class="space-y-0.5">
-      <h2 class="font-heading font-semibold">Appearance</h2>
-      <p class="text-muted-foreground text-sm">Choose light, dark, or match your system.</p>
+      <h2 class="font-heading font-semibold">{t("settings.appearance")}</h2>
+      <p class="text-muted-foreground text-sm">{t("settings.appearanceHint")}</p>
     </div>
     <div class="bg-muted/50 inline-flex items-center rounded-xl border p-1">
       {#each modes as m (m.value)}
@@ -256,10 +276,42 @@
     </div>
   </section>
 
+  <section class="bg-card ring-border/70 space-y-3 rounded-2xl border p-5 ring-1">
+    <div class="space-y-0.5">
+      <h2 class="font-heading font-semibold">{t("settings.dashboardCards")}</h2>
+      <p class="text-muted-foreground text-sm">{t("settings.dashboardCardsHint")}</p>
+    </div>
+    <div class="bg-muted/50 inline-flex items-center rounded-xl border p-1" role="radiogroup" aria-label={t("settings.dashboardCards")}>
+      {#each cardStyles as c (c.value)}
+        {@const active = prefsMounted && prefs.dashboardCards === c.value}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={active}
+          onclick={() => setPref("dashboardCards", c.value)}
+          class={cn(
+            "rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
+            active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {c.label}
+        </button>
+      {/each}
+    </div>
+  </section>
+
+  <section class="bg-card ring-border/70 space-y-3 rounded-2xl border p-5 ring-1">
+    <div class="space-y-0.5">
+      <h2 class="font-heading font-semibold">{t("settings.language")}</h2>
+      <p class="text-muted-foreground text-sm">{t("settings.languageHint")}</p>
+    </div>
+    <LanguageSelect class="w-full sm:w-72" />
+  </section>
+
   <section class="bg-card ring-border/70 space-y-4 rounded-2xl border p-5 ring-1">
     <div class="space-y-0.5">
-      <h2 class="font-heading font-semibold">Accent color</h2>
-      <p class="text-muted-foreground text-sm">Recolor buttons, links and highlights across the app.</p>
+      <h2 class="font-heading font-semibold">{t("settings.accent")}</h2>
+      <p class="text-muted-foreground text-sm">{t("settings.accentHint")}</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -276,7 +328,7 @@
           style="background-color: {a.color}"
         >
           {#if activeAccent === a.name}
-            <RiCheckLine class="size-4 text-white" />
+            <span style="color: {a.fg}"><RiCheckLine class="size-4" /></span>
           {/if}
         </button>
       {/each}
@@ -285,30 +337,31 @@
         onclick={clearAccent}
         class="text-muted-foreground hover:text-foreground text-sm underline underline-offset-2"
       >
-        Reset
+        {t("settings.reset")}
       </button>
     </div>
 
     <div class="border-border/60 flex flex-wrap items-center gap-3 rounded-xl border border-dashed p-4">
-      <Button size="sm" class="rounded-full">Primary button</Button>
-      <DifficultyBadge difficulty="MASTER" level={32} />
+      <Button size="sm" class="rounded-full">{t("settings.primaryButton")}</Button>
+      <LevelBadge level={32} />
       <span class="text-primary inline-flex items-center gap-1 text-sm font-medium">
         <RiHeart3Fill class="size-4" />
-        Accent link
+        {t("settings.accentLink")}
       </span>
     </div>
 
-    <p class="text-muted-foreground text-xs">Accent changes apply live but reset on reload.</p>
+    <p class="text-muted-foreground text-xs">{t("settings.accentChangesApplyLiveBut")}</p>
   </section>
 
-  <AuthorizedApps />
+  {#if session.isLoggedIn}
+    <AuthorizedApps />
+  {/if}
 </main>
 
-<!-- Upload + crop modal -->
 <Modal bind:open={cropOpen}>
   <div class="p-1">
     <h2 class="font-heading mb-3 text-base font-semibold">
-      {cropType === "pfp" ? "Profile picture" : "Background"}
+      {cropType === "pfp" ? t("settings.profilePicture") : t("settings.background")}
     </h2>
 
     <input
@@ -340,9 +393,9 @@
         class={`flex min-h-44 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-colors ${dragOver ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-foreground/30"}`}
       >
         <RiImageAddLine class="size-9 opacity-70" />
-        <span class="text-sm font-medium">Drop an image here, or click to select</span>
+        <span class="text-sm font-medium">{t("settings.dropAnImageHereOr")}</span>
         <span class="text-xs opacity-70">
-          {cropType === "pfp" ? "Square (1:1)" : "Wide (3:1)"} · PNG, JPEG or WebP
+          {t("settings.pngJpegOrWebp", [cropType === "pfp" ? t("settings.aspectSquare") : t("settings.aspectWide")])}
         </span>
       </button>
     {/if}

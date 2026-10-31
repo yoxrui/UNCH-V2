@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import type { Chart } from "$lib/data/index.js";
   import ChartCard from "./chart-card.svelte";
   import ChartRow from "./chart-row.svelte";
@@ -9,7 +10,7 @@
 
   let {
     charts,
-    emptyMessage = "No charts here yet.",
+    emptyMessage = t("collections.emptyDefault"),
   }: {
     charts: Chart[];
     emptyMessage?: string;
@@ -17,10 +18,10 @@
 
   type SortKey = "recent" | "rating" | "likes" | "title";
   const sortOptions = [
-    { value: "recent", label: "Recently added" },
-    { value: "rating", label: "Difficulty" },
-    { value: "likes", label: "Most liked" },
-    { value: "title", label: "Title (A–Z)" },
+    { value: "recent", get label() { return t("collections.sortRecent"); } },
+    { value: "rating", get label() { return t("collections.sortDifficulty"); } },
+    { value: "likes", get label() { return t("userProfile.sortMostLiked"); } },
+    { value: "title", get label() { return t("collections.sortTitle"); } },
   ] as const;
 
   let sort = $state<SortKey>("recent");
@@ -43,15 +44,14 @@
 
 <div class="space-y-4">
   <div class="flex items-center justify-between gap-3">
-    <Select bind:value={sort} options={sortOptions} label="Sort" ariaLabel="Sort charts" />
+    <Select bind:value={sort} options={sortOptions} label={t("dashboard.sort")} ariaLabel={t("userProfile.sortCharts")} />
 
-    <!-- view toggle: desktop only (mobile is always the compact list) -->
     <div class="bg-muted/50 hidden items-center rounded-lg border p-0.5 md:flex">
       <button
         type="button"
         onclick={() => (view = "grid")}
         aria-pressed={view === "grid"}
-        aria-label="Grid view"
+        aria-label={t("browse.gridView")}
         class={cn(
           "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
           view === "grid"
@@ -59,13 +59,13 @@
             : "text-muted-foreground hover:text-foreground",
         )}
       >
-        <RiGridFill class="size-3.5" /> Grid
+        <RiGridFill class="size-3.5" /> {t("browse.grid")}
       </button>
       <button
         type="button"
         onclick={() => (view = "list")}
         aria-pressed={view === "list"}
-        aria-label="List view"
+        aria-label={t("browse.listView")}
         class={cn(
           "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
           view === "list"
@@ -73,7 +73,7 @@
             : "text-muted-foreground hover:text-foreground",
         )}
       >
-        <RiListUnordered class="size-3.5" /> List
+        <RiListUnordered class="size-3.5" /> {t("browse.list")}
       </button>
     </div>
   </div>
@@ -86,14 +86,12 @@
       <p class="text-sm">{emptyMessage}</p>
     </div>
   {:else}
-    <!-- Mobile: compact vertical list -->
     <div class="space-y-2.5 md:hidden">
       {#each sorted as chart (chart.id)}
         <ChartListCard {chart} />
       {/each}
     </div>
 
-    <!-- Desktop: grid or list -->
     {#if view === "list"}
       <div class="hidden space-y-2.5 md:block">
         {#each sorted as chart (chart.id)}

@@ -28,7 +28,6 @@
     open = false;
   }
 
-  // Close on outside click / Escape (native <details> only toggles from the summary).
   $effect(() => {
     if (!open) return;
     function onPointerDown(e: PointerEvent) {

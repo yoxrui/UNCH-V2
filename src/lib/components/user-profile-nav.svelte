@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { cn } from "$lib/utils.js";
   import Button from "./button.svelte";
   import CoverArt from "./cover-art.svelte";
@@ -6,6 +7,7 @@
   import { session } from "$lib/state/session.svelte";
   import {
     RiDashboardLine,
+    RiNotification3Line,
     RiSettings3Line,
     RiLogoutBoxRLine,
     RiLoginBoxLine,
@@ -14,14 +16,14 @@
 
   const user = $derived(session.user);
 
-  // Shared by both the desktop dropdown and the mobile sheet.
   const menuItems = [
-    { label: "Dashboard", href: "/dashboard", icon: RiDashboardLine },
-    { label: "Settings", href: "/dashboard/settings", icon: RiSettings3Line },
+    { get label() { return t("nav.dashboard"); }, href: "/dashboard", icon: RiDashboardLine },
+    { get label() { return t("notifications.title"); }, href: "/dashboard/notifications", icon: RiNotification3Line },
+    { get label() { return t("settings.title"); }, href: "/dashboard/settings", icon: RiSettings3Line },
   ];
 
-  let open = $state(false); // desktop <details>
-  let sheetOpen = $state(false); // mobile sheet
+  let open = $state(false);
+  let sheetOpen = $state(false);
   let root = $state<HTMLDetailsElement>();
 
   function close() {
@@ -29,8 +31,6 @@
     sheetOpen = false;
   }
 
-  // Native <details> only toggles from its <summary>, so close the dropdown on an
-  // outside click / Escape ourselves. Mirrors select.svelte.
   $effect(() => {
     if (!open) return;
     function onPointerDown(e: PointerEvent) {
@@ -69,7 +69,7 @@
       class="gap-2.5 text-rose-500 dark:text-rose-400"
     >
       <RiLogoutBoxRLine class="size-4 shrink-0" />
-      Logout
+      {t("nav.logout")}
     </button>
   </li>
 {/snippet}
@@ -77,10 +77,9 @@
 {#if session.loading}
   <div class="bg-muted size-8 animate-pulse rounded-full md:size-9"></div>
 {:else if session.isLoggedIn && user}
-  <!-- Desktop: DaisyUI dropdown (mirrors select.svelte) -->
   <details bind:this={root} bind:open class="dropdown dropdown-end hidden md:block">
     <summary
-      aria-label="Profile menu"
+      aria-label={t("nav.profileMenu")}
       class={cn(
         "focus-visible:ring-ring/50 relative flex h-9 cursor-pointer list-none items-center gap-2 overflow-hidden rounded-full border pr-2.5 pl-1 outline-none transition-colors select-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden",
         !user.banner && "hover:bg-accent/60",
@@ -127,7 +126,7 @@
           />
           <div class="min-w-0">
             <p class="text-foreground truncate text-sm font-semibold">{user.username}</p>
-            <p class="text-muted-foreground text-xs">View profile</p>
+            <p class="text-muted-foreground text-xs">{t("nav.viewProfile")}</p>
           </div>
         </a>
       </li>
@@ -135,11 +134,10 @@
     </ul>
   </details>
 
-  <!-- Mobile: avatar button → bottom sheet -->
   <button
     type="button"
     onclick={() => (sheetOpen = true)}
-    aria-label="Open profile menu"
+    aria-label={t("nav.openProfileMenu")}
     class="flex items-center md:hidden"
   >
     <CoverArt
@@ -165,7 +163,7 @@
       />
       <div class="min-w-0">
         <p class="font-heading font-semibold">{user.username}</p>
-        <p class="text-muted-foreground text-sm">View profile</p>
+        <p class="text-muted-foreground text-sm">{t("nav.viewProfile")}</p>
       </div>
     </a>
     <ul class="menu w-full gap-0.5 px-2 pb-[calc(1rem+env(safe-area-inset-bottom))] text-base">
@@ -175,6 +173,6 @@
 {:else}
   <Button size="sm" class="rounded-full" onclick={() => session.login()}>
     <RiLoginBoxLine class="size-4" />
-    Login
+    {t("nav.login")}
   </Button>
 {/if}

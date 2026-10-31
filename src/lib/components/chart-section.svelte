@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import type { Chart } from "$lib/data/index.js";
   import ChartCard from "./chart-card.svelte";
   import * as Carousel from "$lib/components/carousel/index.js";
@@ -9,7 +10,7 @@
     title,
     charts,
     href,
-    hrefLabel = "View all",
+    hrefLabel = t("home.viewAll"),
     columns = "row",
     carousel = false,
   }: {
@@ -18,7 +19,6 @@
     href?: string;
     hrefLabel?: string;
     columns?: "row" | "grid";
-    /** Render as a draggable, snapping Embla row instead of a static grid. */
     carousel?: boolean;
   } = $props();
 </script>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import Sheet from "$lib/components/sheet.svelte";
   import { cn } from "$lib/utils.js";
   import {
@@ -28,7 +29,7 @@
   let input = $state<HTMLInputElement | null>(null);
 
   const activeCount = $derived(activeFilterCount(filters));
-  const sortLabel = $derived(sortByOptions.find((o) => o.value === filters.sortBy)?.label ?? "Decaying Likes");
+  const sortLabel = $derived(sortByOptions.find((o) => o.value === filters.sortBy)?.label ?? t("search.decayingLikes"));
   const showSort = $derived(filters.searchType !== "random" && filters.searchType !== "newest");
   const isAdvanced = $derived(filters.searchType === "advanced");
 
@@ -54,7 +55,6 @@
 <div
   class="bg-background/85 supports-backdrop-filter:bg-background/70 sticky top-18 z-30 -mx-4 space-y-2.5 px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6"
 >
-  <!-- Search -->
   <div class="relative">
     <RiSearchLine
       class="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2"
@@ -65,15 +65,15 @@
       type="search"
       inputmode="search"
       enterkeyhint="search"
-      placeholder="Search charts, songs, charters…"
-      aria-label="Search charts"
+      placeholder={t("browse.searchChartsSongsCharters")}
+      aria-label={t("nav.searchCharts")}
       class="bg-card focus-visible:ring-ring/50 h-12 w-full rounded-2xl border pr-11 pl-11 text-[15px] shadow-sm outline-none focus-visible:ring-2"
     />
     {#if filters.keywords}
       <button
         type="button"
         onclick={() => (filters.keywords = "")}
-        aria-label="Clear search"
+        aria-label={t("browse.clearSearch")}
         class="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-full"
       >
         <RiCloseLine class="size-5" />
@@ -81,7 +81,6 @@
     {/if}
   </div>
 
-  <!-- Quick controls: sort + filters -->
   <div class="flex items-center gap-2">
     <button
       type="button"
@@ -100,7 +99,7 @@
       )}
     >
       <RiEqualizerLine class="size-4" />
-      Filters
+      {t("dashboard.filters")}
       {#if activeCount > 0}
         <span
           class="bg-primary text-primary-foreground grid size-5 place-items-center rounded-full text-[11px] font-bold tabular-nums"
@@ -111,14 +110,13 @@
   </div>
 </div>
 
-<!-- Sort + type bottom sheet -->
 <Sheet bind:open={sortOpen} class="pb-[env(safe-area-inset-bottom)]">
   <div class="px-4 py-3 text-left">
-    <h2 class="font-heading text-base font-semibold">Sort & type</h2>
+    <h2 class="font-heading text-base font-semibold">{t("browse.sortType")}</h2>
   </div>
   <div class="max-h-[65vh] space-y-5 overflow-y-auto px-4 pb-6">
       <section class="space-y-2">
-        <h3 class="text-muted-foreground text-xs font-semibold">Search type</h3>
+        <h3 class="text-muted-foreground text-xs font-semibold">{t("browse.searchType")}</h3>
         <div class="flex flex-wrap gap-2">
           {#each searchTypes as o (o.value)}
             {@const active = filters.searchType === o.value}
@@ -139,7 +137,7 @@
 
       {#if showSort}
         <section class="space-y-1">
-          <h3 class="text-muted-foreground text-xs font-semibold">Sort by</h3>
+          <h3 class="text-muted-foreground text-xs font-semibold">{t("dashboard.sortBy")}</h3>
           {#each sortByOptions as o (o.value)}
             {@const active = filters.sortBy === o.value}
             <button
@@ -157,7 +155,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-muted-foreground text-xs font-semibold">Order</h3>
+          <h3 class="text-muted-foreground text-xs font-semibold">{t("search.order")}</h3>
           <div class="flex gap-2">
             {#each orderOptions as o (o.value)}
               {@const active = filters.sortOrder === o.value}
@@ -179,12 +177,11 @@
     </div>
 </Sheet>
 
-<!-- Filters bottom sheet -->
 <Sheet bind:open={filtersOpen} class="pb-[env(safe-area-inset-bottom)]">
   <div class="flex flex-row items-center justify-between px-4 py-3 text-left">
-    <h2 class="font-heading text-base font-semibold">Filters</h2>
+    <h2 class="font-heading text-base font-semibold">{t("dashboard.filters")}</h2>
     {#if activeCount > 0}
-      <button type="button" onclick={resetFilters} class="text-primary text-sm font-medium">Reset</button>
+      <button type="button" onclick={resetFilters} class="text-primary text-sm font-medium">{t("settings.reset")}</button>
     {/if}
   </div>
 
@@ -201,40 +198,40 @@
               : "border-border text-muted-foreground",
           )}
         >
-          <RiStarFill class="size-4" /> Staff picks only
+          <RiStarFill class="size-4" /> {t("browse.staffPicksOnly")}
         </button>
       {/if}
 
       {#if isAdvanced}
         <div class="grid grid-cols-2 gap-3">
           <label class="space-y-1">
-            <span class="text-muted-foreground text-xs">Min rating</span>
+            <span class="text-muted-foreground text-xs">{t("browse.minRating")}</span>
             <input type="number" min="1" max="99" placeholder="25" bind:value={filters.minRating} class={inputClass} />
           </label>
           <label class="space-y-1">
-            <span class="text-muted-foreground text-xs">Max rating</span>
+            <span class="text-muted-foreground text-xs">{t("browse.maxRating")}</span>
             <input type="number" min="1" max="99" placeholder="32" bind:value={filters.maxRating} class={inputClass} />
           </label>
         </div>
         <label class="block space-y-1">
-          <span class="text-muted-foreground text-xs">Author handle</span>
+          <span class="text-muted-foreground text-xs">{t("browse.authorHandle")}</span>
           <input type="text" placeholder="e.g. 78302" bind:value={filters.authorHandle} class={inputClass} />
         </label>
         <label class="block space-y-1">
-          <span class="text-muted-foreground text-xs">Title includes</span>
-          <input type="text" placeholder="Search in titles…" bind:value={filters.titleIncludes} class={inputClass} />
+          <span class="text-muted-foreground text-xs">{t("browse.titleIncludes")}</span>
+          <input type="text" placeholder={t("browse.searchInTitles")} bind:value={filters.titleIncludes} class={inputClass} />
         </label>
         <label class="block space-y-1">
-          <span class="text-muted-foreground text-xs">Artists includes</span>
-          <input type="text" placeholder="Search in artists…" bind:value={filters.artistsIncludes} class={inputClass} />
+          <span class="text-muted-foreground text-xs">{t("browse.artistsIncludes")}</span>
+          <input type="text" placeholder={t("browse.searchInArtists")} bind:value={filters.artistsIncludes} class={inputClass} />
         </label>
         <label class="block space-y-1">
-          <span class="text-muted-foreground text-xs">Description includes</span>
-          <input type="text" placeholder="Search in descriptions…" bind:value={filters.descriptionIncludes} class={inputClass} />
+          <span class="text-muted-foreground text-xs">{t("browse.descriptionIncludes")}</span>
+          <input type="text" placeholder={t("browse.searchInDescriptions")} bind:value={filters.descriptionIncludes} class={inputClass} />
         </label>
         <label class="block space-y-1">
-          <span class="text-muted-foreground text-xs">Tags</span>
-          <input type="text" placeholder="Comma-separated tags" bind:value={filters.tags} class={inputClass} />
+          <span class="text-muted-foreground text-xs">{t("search.tags")}</span>
+          <input type="text" placeholder={t("browse.commaSeparatedTags")} bind:value={filters.tags} class={inputClass} />
         </label>
       {/if}
     </div>
@@ -245,8 +242,7 @@
         onclick={() => (filtersOpen = false)}
         class="bg-primary text-primary-foreground flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold"
       >
-        Show {total}
-        {total === 1 ? "chart" : "charts"}
+        {total === 1 ? t("browse.showChart_singular", [total]) : t("browse.showChart_plural", [total])}
       </button>
     </div>
 </Sheet>

@@ -9,6 +9,7 @@ export const emojis: Record<string, Emoji> = {
   punish_natz: { image: "punish_natz.webp" },
   silly_3d_printed_cat: { image: "silly_3d_printed_cat.webp" },
   bugcat_swim: { image: "bugcat_swim.gif" },
+  ilovesharks: { image: "shark.webp" },
 };
 
 export function emojiSrc(name: string): string | null {

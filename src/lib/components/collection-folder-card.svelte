@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import {
     collectionCharts,
     collectionDifficulties,
@@ -22,7 +23,6 @@
   href={`/dashboard/collections/${collection.id}`}
   class="group bg-card ring-border/70 hover:ring-primary/40 relative flex flex-col overflow-hidden rounded-2xl ring-1 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
 >
-  <!-- 2×2 cover mosaic -->
   <div class="bg-muted relative grid aspect-square grid-cols-2 grid-rows-2 gap-0.5">
     {#each [0, 1, 2, 3] as i (i)}
       {@const chart = covers[i]}
@@ -47,7 +47,6 @@
     </span>
   </div>
 
-  <!-- meta -->
   <div class="flex flex-1 flex-col gap-2 p-3">
     <div class="min-w-0 space-y-0.5">
       <h3
@@ -56,7 +55,7 @@
         {#if collection.emoji}<span class="mr-1">{collection.emoji}</span>{/if}{collection.name}
       </h3>
       <p class="text-muted-foreground truncate text-xs">
-        Updated {relativeTime(collection.updatedAt)}
+        {t("collections.updated", [relativeTime(collection.updatedAt)])}
       </p>
     </div>
 

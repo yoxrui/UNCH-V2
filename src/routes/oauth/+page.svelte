@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
+  import { cn } from "$lib/utils.js";
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
   import SiteHeader from "$lib/components/site-header.svelte";
@@ -44,18 +46,27 @@
       });
       const data = await res.json();
       if (!res.ok) {
-        error = data.message || "This authorization request is not valid.";
+        error = data.message || t("oauth.invalidRequest");
         return;
       }
       app = data;
     } catch {
-      error = "Couldn't reach the server. Please try again.";
+      error = t("oauth.connectionFailed");
     }
   }
+
+  let trustError = $state(false);
+  let trustBox = $state<HTMLInputElement | null>(null);
 
   async function authorize() {
     const key = session.sessionKey;
     if (!key || !app) return;
+    if (!confirmed) {
+      trustError = true;
+      trustBox?.focus();
+      return;
+    }
+    trustError = false;
     submitting = true;
     error = null;
     const body: Record<string, unknown> = {
@@ -89,9 +100,9 @@
         setTimeout(() => goto("/dashboard/settings"), 22000);
         return;
       }
-      error = message || `Could not authorize this app (HTTP ${res.status}).`;
+      error = message || t("oauth.authorizeFailedStatus", [res.status]);
     } catch {
-      error = "Couldn't reach the server. Please try again.";
+      error = t("oauth.connectionFailed");
       submitting = false;
     }
   }
@@ -128,7 +139,7 @@
 </script>
 
 <svelte:head>
-  <title>Authorize app | UntitledCharts</title>
+  <title>{t("oauth.authorizeAppUntitledcharts")}</title>
 </svelte:head>
 
 <SiteHeader />
@@ -136,22 +147,22 @@
 <main class="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
   {#if !ready || (loggedIn && isAuthorizeRequest && !app && !error)}
     <div class="flex min-h-[45vh] flex-col items-center justify-center gap-4">
-      <span class="text-muted-foreground text-sm">Verifying request…</span>
+      <span class="text-muted-foreground text-sm">{t("oauth.verifyingRequest")}</span>
       <span class="loading loading-spinner text-primary"></span>
     </div>
   {:else if !loggedIn}
     <div class="bg-card ring-border/70 rounded-2xl border ring-1">
       <div class="border-b px-6 py-5">
-        <p class="text-muted-foreground text-xs font-medium">Authorization request</p>
-        <h1 class="font-heading mt-2 text-xl font-bold tracking-tight">Sign in to continue</h1>
+        <p class="text-muted-foreground text-xs font-medium">{t("oauth.authorizationRequest")}</p>
+        <h1 class="font-heading mt-2 text-xl font-bold tracking-tight">{t("oauth.signInToContinue")}</h1>
       </div>
       <div class="space-y-4 px-6 py-5">
         <p class="text-muted-foreground text-sm">
-          Log in with Sonolus to review what this app is asking for.
+          {t("oauth.logInWithSonolusTo")}
         </p>
         <Button onclick={() => session.login()} disabled={session.pending} class="w-full rounded-lg">
           <RiLoginBoxLine class="size-4" />
-          {session.pending ? "Waiting for confirmation…" : "Log in with Sonolus"}
+          {session.pending ? t("login.waitingForConfirmation") : t("login.logInWithSonolus")}
         </Button>
       </div>
     </div>
@@ -159,11 +170,11 @@
     <div class="bg-card ring-border/70 rounded-2xl border ring-1">
       <div class="flex items-center gap-2 border-b px-6 py-5 text-rose-500">
         <RiErrorWarningLine class="size-5 shrink-0" />
-        <h1 class="font-heading text-lg font-bold tracking-tight">Request rejected</h1>
+        <h1 class="font-heading text-lg font-bold tracking-tight">{t("oauth.requestRejected")}</h1>
       </div>
       <div class="space-y-4 px-6 py-5">
         <p class="text-muted-foreground text-sm">{error}</p>
-        <Button href="/dashboard/settings" variant="outline" class="rounded-lg">Back to settings</Button>
+        <Button href="/dashboard/settings" variant="outline" class="rounded-lg">{t("oauth.backToSettings")}</Button>
       </div>
     </div>
   {:else if app}
@@ -171,7 +182,7 @@
       <div class="px-6 py-6 sm:px-7">
         <h1 class="font-heading text-2xl leading-tight font-bold tracking-tight">{app.name}</h1>
         <p class="text-muted-foreground mt-1 text-sm">
-          wants to connect to your UntitledCharts account
+          {t("oauth.wantsToConnectToYour")}
         </p>
 
         <div class="mt-4 inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1">
@@ -188,7 +199,7 @@
       </div>
 
       <div class="border-t px-6 py-5 sm:px-7">
-        <h2 class="text-sm font-semibold">What {app.name} will be able to do</h2>
+        <h2 class="text-sm font-semibold">{t("oauth.whatWillBeAbleTo", [app.name])}</h2>
         <ul class="divide-border/60 mt-1 divide-y">
           {#each app.scopes as s (s.scope)}
             <li class="flex gap-3 py-3">
@@ -201,7 +212,7 @@
           {/each}
         </ul>
         <p class="text-muted-foreground mt-4 text-xs">
-          You can revoke this at any time from Authorized Apps.
+          {t("oauth.revokeNotice")}
         </p>
       </div>
 
@@ -212,34 +223,42 @@
           </p>
         {/if}
 
-        <label class="flex cursor-pointer items-start gap-2.5">
+        {#if trustError && !confirmed}
+          <p id="trust-error" class="text-sm font-medium text-rose-600 dark:text-rose-400">
+            <span class="sr-only">{t("common.error")}:</span>
+            {t("oauth.trustRequired", [app.name])}
+          </p>
+        {/if}
+        <label class={cn("flex cursor-pointer items-start gap-2.5", trustError && !confirmed && "border-l-4 border-rose-500 pl-3")}>
           <input
+            bind:this={trustBox}
             type="checkbox"
             bind:checked={confirmed}
             disabled={authorized}
+            aria-invalid={trustError && !confirmed}
+            aria-describedby={trustError && !confirmed ? "trust-error" : undefined}
             class="checkbox checkbox-primary checkbox-sm mt-0.5"
           />
           <span class="text-muted-foreground text-sm">
-            I trust <span class="text-foreground font-medium">{app.name}</span> and grant it the access
-            listed above.
+            {t("oauth.iTrust")} <span class="text-foreground font-medium">{app.name}</span> {t("oauth.andGrantItTheAccess")}
           </span>
         </label>
         <div class="flex gap-3">
           <Button onclick={deny} variant="ghost" disabled={submitting || authorized} class="flex-1 rounded-lg">
-            Deny
+            {t("oauth.deny")}
           </Button>
           <Button
             onclick={authorize}
-            disabled={submitting || authorized || !confirmed}
+            disabled={submitting || authorized}
             class="flex-[1.4] rounded-lg"
           >
-            {authorized ? "Authorized" : submitting ? "Authorizing…" : "Authorize access"}
+            {authorized ? t("oauth.authorized") : submitting ? t("oauth.authorizing") : t("oauth.authorizeAccess")}
           </Button>
         </div>
 
         {#if showRedirectNote}
           <p class="text-muted-foreground text-center text-xs">
-            Redirecting to Settings in 20 seconds…
+            {t("oauth.redirectingToSettingsIn20")}
           </p>
         {/if}
       </div>

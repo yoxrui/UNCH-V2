@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import SiteHeader from "$lib/components/site-header.svelte";
   import SiteFooter from "$lib/components/site-footer.svelte";
   import BrowseFilters from "$lib/components/browse/browse-filters.svelte";
@@ -7,6 +8,7 @@
   import ChartCard from "$lib/components/chart-card.svelte";
   import ChartListCard from "$lib/components/chart-list-card.svelte";
   import ChartSkeleton from "$lib/components/chart-skeleton.svelte";
+  import Seo from "$lib/components/seo.svelte";
   import Pager from "$lib/components/pager.svelte";
   import Button from "$lib/components/button.svelte";
   import { cn } from "$lib/utils.js";
@@ -53,8 +55,18 @@
 
   let filters = $state<Filters>(initFilters());
   let view = $state<"list" | "grid">("grid");
-  let current = $state(1); // 1-based
+  let current = $state(1);
   const autofocusSearch = page.url.searchParams.get("focus") === "1";
+
+  // the header search navigates here with ?q=, so pick it up even when already on this page
+  let lastQuery = page.url.searchParams.get("q");
+  $effect(() => {
+    const q = page.url.searchParams.get("q");
+    if (q === lastQuery) return;
+    lastQuery = q;
+    filters.keywords = q ?? "";
+    current = 1;
+  });
 
   let charts = $state<Chart[]>([]);
   let pageCount = $state(1);
@@ -62,7 +74,6 @@
 
   const gridCharts = $derived(charts.slice(0, Math.floor(charts.length / 3) * 3));
 
-  // Reset to the first page whenever the filter set changes.
   const filterKey = $derived(
     [
       filters.searchType,
@@ -108,26 +119,26 @@
   }
 </script>
 
-<svelte:head>
-  <title>Browse | UntitledCharts</title>
-</svelte:head>
+<Seo
+  title={t("nav.browse")}
+  description={t("browse.filterTheCatalogByDifficulty2")}
+  image="/og?title=Browse&subtitle=Filter+the+catalog+by+difficulty%2C+level+and+staff+picks"
+/>
 
 <SiteHeader />
 
 <main class="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:space-y-5 sm:px-6 sm:py-8">
   <header class="space-y-1">
-    <h1 class="font-heading text-xl font-bold tracking-tight sm:text-2xl">Browse charts</h1>
+    <h1 class="font-heading text-xl font-bold tracking-tight sm:text-2xl">{t("error.browseCharts")}</h1>
     <p class="text-muted-foreground hidden text-sm sm:block">
-      Filter the catalog by difficulty, level, and staff picks, sorted however you like.
+      {t("browse.filterTheCatalogByDifficulty")}
     </p>
   </header>
 
-  <!-- Mobile: sticky search + quick sort + filter bottom sheet -->
   <div class="md:hidden">
     <MobileBrowseControls bind:filters total={charts.length} autofocus={autofocusSearch} />
   </div>
 
-  <!-- Desktop: search field + full filter panel -->
   <div class="hidden space-y-3 md:block">
     <div class="relative">
       <RiSearchLine
@@ -136,35 +147,32 @@
       <input
         bind:value={filters.keywords}
         type="search"
-        placeholder="Search charts, songs, charters…"
-        aria-label="Search charts"
+        placeholder={t("browse.searchChartsSongsCharters")}
+        aria-label={t("nav.searchCharts")}
         class="bg-card focus-visible:ring-ring/50 h-11 w-full rounded-xl border pr-4 pl-10 text-sm outline-none focus-visible:ring-2"
       />
     </div>
     <BrowseFilters bind:filters />
   </div>
 
-  <!-- Result controls -->
   <div class="flex items-center justify-between gap-3">
     <p class="text-muted-foreground text-sm">
       {#if loading}
-        Loading…
+        {t("common.loading")}
       {:else}
-        <span class="text-foreground font-semibold tabular-nums">{charts.length}</span>
-        {charts.length === 1 ? "chart" : "charts"} on this page
+        {charts.length === 1 ? t("browse.onThisPage_singular", [charts.length]) : t("browse.onThisPage_plural", [charts.length])}
       {/if}
       {#if !isDefault(filters)}
-        <button onclick={reset} class="text-primary ml-2 hover:underline">Clear</button>
+        <button onclick={reset} class="text-primary ml-2 hover:underline">{t("browse.clear")}</button>
       {/if}
     </p>
 
-    <!-- view toggle: desktop only (mobile is always the compact list) -->
     <div class="bg-muted/50 hidden items-center rounded-lg border p-0.5 md:flex">
       <button
         type="button"
         onclick={() => (view = "grid")}
         aria-pressed={view === "grid"}
-        aria-label="Grid view"
+        aria-label={t("browse.gridView")}
         class={cn(
           "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
           view === "grid"
@@ -172,13 +180,13 @@
             : "text-muted-foreground hover:text-foreground",
         )}
       >
-        <RiGridFill class="size-3.5" /> Grid
+        <RiGridFill class="size-3.5" /> {t("browse.grid")}
       </button>
       <button
         type="button"
         onclick={() => (view = "list")}
         aria-pressed={view === "list"}
-        aria-label="List view"
+        aria-label={t("browse.listView")}
         class={cn(
           "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
           view === "list"
@@ -186,12 +194,11 @@
             : "text-muted-foreground hover:text-foreground",
         )}
       >
-        <RiListUnordered class="size-3.5" /> List
+        <RiListUnordered class="size-3.5" /> {t("browse.list")}
       </button>
     </div>
   </div>
 
-  <!-- Results -->
   {#if loading}
     <div class="space-y-2.5 md:hidden">
       {#each Array(6) as _, i (i)}
@@ -216,11 +223,10 @@
       class="text-muted-foreground flex flex-col items-center gap-3 rounded-2xl border border-dashed py-20"
     >
       <RiEmotionSadLine class="size-10 opacity-50" />
-      <p class="text-sm">No charts match these filters.</p>
-      <Button variant="outline" size="sm" onclick={reset}>Reset filters</Button>
+      <p class="text-sm">{t("browse.noChartsMatchTheseFilters")}</p>
+      <Button variant="outline" size="sm" onclick={reset}>{t("browse.resetFilters")}</Button>
     </div>
   {:else}
-    <!-- Mobile: compact vertical list -->
     <div class="space-y-2.5 md:hidden">
       {#each charts as chart (chart.id)}
         <div animate:flip={{ duration: 250 }} in:fade={{ duration: 180 }}>
@@ -229,7 +235,6 @@
       {/each}
     </div>
 
-    <!-- Desktop: grid or list -->
     {#if view === "list"}
       <div class="hidden space-y-2.5 md:block">
         {#each charts as chart (chart.id)}
@@ -252,7 +257,7 @@
   {#if filters.searchType === "random"}
     <div class="flex justify-center pt-2">
       <Button onclick={reroll} disabled={loading} class="rounded-full">
-        {loading ? "Rerolling…" : "Reroll"}
+        {loading ? t("browse.rerolling") : t("search.reroll")}
       </Button>
     </div>
   {:else}

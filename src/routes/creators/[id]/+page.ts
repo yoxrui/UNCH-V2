@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { fetchAccountByHandle, fetchCharts } from "$lib/data/index.js";
+import { fetchAccountByHandle, fetchAccountStats, fetchCharts } from "$lib/data/index.js";
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ params, fetch }) => {
@@ -8,6 +8,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
 
   return {
     account: result.account,
+    stats: await fetchAccountStats(fetch, result.account.sonolus_id),
     charts: fetchCharts(fetch, {
       type: "advanced",
       sonolus_handle_is: String(result.account.sonolus_handle),

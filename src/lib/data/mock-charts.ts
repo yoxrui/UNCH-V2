@@ -1,12 +1,4 @@
-/**
- * Mock chart fixtures for the frontend-only dashboard/library.
- *
- * Shaped exactly like the API `Chart` type so the same components render them.
- * `*_file_hash` are intentionally empty — `CoverArt` then shows its deterministic
- * gradient + initial fallback, so covers look intentional with no bundled assets.
- *
- * Swap-in seam: replace `mockCharts` with real fetched data later.
- */
+
 import type { Chart } from "./types.js";
 
 type CharterKey = "luna" | "prisma" | "nova" | "volt" | "echo";
@@ -55,6 +47,9 @@ function mk(o: {
     jacket_file_hash: "",
     music_file_hash: "",
     background_file_hash: "",
+    preview_file_hash: "",
+    custom_background: false,
+    chart_file_hash: "",
   };
 }
 

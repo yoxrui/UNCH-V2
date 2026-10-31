@@ -1,139 +1,264 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import SiteHeader from "$lib/components/site-header.svelte";
   import SiteFooter from "$lib/components/site-footer.svelte";
   import CoverArt from "$lib/components/cover-art.svelte";
   import ChartCard from "$lib/components/chart-card.svelte";
   import ChartSkeleton from "$lib/components/chart-skeleton.svelte";
   import FormattedText from "$lib/components/formatted-text.svelte";
+  import Seo from "$lib/components/seo.svelte";
+  import { userEmbed } from "$lib/discord-embed.js";
+  import { userStatusId, userFooter } from "$lib/activity-id.js";
+  import { page } from "$app/state";
+  import { untrack } from "svelte";
+  import Pager from "$lib/components/pager.svelte";
+  import { recallPage, rememberPage, recallValue, rememberValue } from "$lib/state/page-memory.js";
   import { cn } from "$lib/utils.js";
-  import { compact, plural, bannerGradient, profileUrl, bannerUrl } from "$lib/data/index.js";
-  import { RiArrowLeftLine, RiHeart3Fill, RiStackLine, RiStarFill } from "$lib/icons.js";
+  import {
+    compact,
+    profileUrl,
+    bannerUrl,
+    type Chart,
+  } from "$lib/data/index.js";
+  import { RiArrowLeftLine, RiHeart3Fill, RiShareLine } from "$lib/icons.js";
 
   let { data } = $props();
   const account = $derived(data.account);
+  const role = $derived(account.admin ? t("userProfile.admin") : account.mod ? t("userProfile.moderator") : null);
+
+  type SortKey = "new" | "liked" | "level";
+  const SORTS: { key: SortKey; label: string }[] = [
+    { key: "new", label: "search.newest" },
+    { key: "liked", label: "userProfile.sortMostLiked" },
+    { key: "level", label: "userProfile.sortHighestLevel" },
+  ];
+  let sort = $state<SortKey>("new");
+  const PER_PAGE = 12;
+  let chartPage = $state(1);
+
+  $effect.pre(() => {
+    const handle = account.sonolus_handle;
+    untrack(() => {
+      sort = recallValue(`user:${handle}:sort`, ["new", "liked", "level"] as const, "new");
+      chartPage = recallPage(`user:${handle}:charts`);
+    });
+  });
+  $effect(() => {
+    rememberValue(`user:${account.sonolus_handle}:sort`, sort, "new");
+    rememberPage(`user:${account.sonolus_handle}:charts`, chartPage);
+  });
+
+  function pageSlice(charts: Chart[]) {
+    const last = Math.max(1, Math.ceil(charts.length / PER_PAGE));
+    const current = Math.min(chartPage, last);
+    return sorted(charts, sort).slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  }
+
+  function sorted(charts: Chart[], key: SortKey) {
+    const list = [...charts];
+    if (key === "liked") list.sort((a, b) => b.like_count - a.like_count);
+    else if (key === "level") list.sort((a, b) => b.rating - a.rating);
+    else list.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return list;
+  }
+
+
+  let copied = $state(false);
+  async function share() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: account.sonolus_username, url });
+      } catch {
+        void 0;
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      copied = true;
+      setTimeout(() => (copied = false), 1500);
+    } catch {
+      void 0;
+    }
+  }
 </script>
 
-<svelte:head>
-  <title>{account.sonolus_username} | UntitledCharts</title>
-</svelte:head>
+<Seo
+  title={account.sonolus_username}
+  description={`${account.sonolus_username}'s charts on UntitledCharts${account.description ? ` · ${account.description}` : ""}`}
+  image={`/og/user/${account.sonolus_handle}`}
+  discord={userEmbed(account, data.stats, page.url.origin)}
+  oembed={`/oembed?title=${encodeURIComponent(account.sonolus_username.replace(/:([a-zA-Z0-9_]+):/g, "").trim())}&page=${encodeURIComponent(`/creators/${account.sonolus_handle}`)}&footer=${encodeURIComponent(userFooter(data.stats?.chartsPublished ?? 0, data.stats?.likesReceived ?? 0, data.stats?.commentsReceived ?? 0))}`}
+  activity={userStatusId(account.sonolus_handle) ? `/users/${account.sonolus_handle}/statuses/${userStatusId(account.sonolus_handle)}` : null}
+  type="profile"
+/>
 
 <SiteHeader />
 
-<main class="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+<main class="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
   <a
-    href="/creators"
+    href="/browse"
     class="text-muted-foreground hover:text-foreground group inline-flex items-center gap-1.5 text-sm transition-colors"
   >
     <RiArrowLeftLine class="size-4 transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none" />
-    Creators
+    {t("nav.browse")}
   </a>
 
-  <!-- Profile header -->
   <section class="bg-card overflow-hidden rounded-3xl border">
-    <div class="relative">
-      {#if bannerUrl(account)}
-        <div
-          class="h-28 bg-cover bg-center sm:h-32"
-          style="background-image: url({bannerUrl(account)})"
-        ></div>
-      {:else}
-        <div class={cn("h-28 bg-linear-to-br sm:h-32", bannerGradient(account.sonolus_id))}></div>
-      {/if}
-      <div
-        class="pointer-events-none absolute inset-x-0 bottom-0 h-12 backdrop-blur-md"
-        style="mask-image: linear-gradient(to top, black, transparent); -webkit-mask-image: linear-gradient(to top, black, transparent);"
-      ></div>
-      <div
-        class="from-card pointer-events-none absolute inset-x-0 bottom-0 hidden h-20 bg-linear-to-t to-transparent sm:block"
-      ></div>
+    <div class="relative h-32 sm:h-52">
+      <div class="absolute inset-0 bg-cover bg-center" style={`background-image:url(${bannerUrl(account)})`}></div>
+      <div class="from-card via-card/40 absolute inset-0 bg-linear-to-t to-transparent"></div>
     </div>
-    <div class="relative z-10 -mt-12 flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-end sm:px-6">
-      <CoverArt
-        id={account.sonolus_id}
-        title={account.sonolus_username}
-        src={profileUrl(account)}
-        rounded="rounded-2xl"
-        class="ring-card size-24 text-3xl ring-4"
-      />
-      <div class="flex min-w-0 flex-1 flex-col gap-2 pb-1 sm:pb-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <h1 class="font-heading text-2xl font-bold tracking-tight">
-            <FormattedText text={account.sonolus_username} />
-          </h1>
-          <span class="text-muted-foreground/70 text-sm tabular-nums">#{account.sonolus_handle}</span>
-          {#if account.admin}
-            <span
-              class="rounded border border-rose-400/40 bg-rose-400/15 px-1.5 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-300"
-              >ADMIN</span
-            >
-          {:else if account.mod}
-            <span
-              class="rounded border border-violet-400/40 bg-violet-400/15 px-1.5 py-0.5 text-[10px] font-bold text-violet-600 dark:text-violet-300"
-              >MOD</span
-            >
-          {/if}
+
+    <div class="relative -mt-14 px-4 pb-5 sm:-mt-20 sm:px-7 sm:pb-7">
+      <div class="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-end sm:gap-6 sm:text-left">
+        <div class="relative shrink-0">
+          <img
+            src="/art/avatar-ring.svg"
+            alt=""
+            aria-hidden="true"
+            class="pointer-events-none absolute -top-3.5 -left-3.5 size-[calc(100%+1.75rem)] max-w-none animate-[spin_40s_linear_infinite] motion-reduce:animate-none"
+          />
+          <CoverArt
+            id={account.sonolus_id}
+            title={account.sonolus_username}
+            src={profileUrl(account)}
+            rounded="rounded-full"
+            class="ring-card relative size-28 shadow-lg ring-4 sm:size-36"
+          />
         </div>
-        {#if account.description}
-          <p class="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-            <FormattedText text={account.description} />
-          </p>
-        {/if}
-        {#await data.charts}
-          <div class="bg-muted h-5 w-40 animate-pulse rounded"></div>
-        {:then charts}
-          {@const totalLikes = charts.reduce((sum, c) => sum + c.like_count, 0)}
-          {@const staffPicks = charts.filter((c) => c.staff_pick).length}
-          <div class="text-muted-foreground flex items-center gap-4 text-sm tabular-nums">
-            <span class="inline-flex items-center gap-1.5">
-              <RiStackLine class="size-4" /><span class="text-foreground font-semibold"
-                >{charts.length}</span
-              > {plural(charts.length, "chart")}
-            </span>
-            <span class="inline-flex items-center gap-1.5">
-              <RiHeart3Fill class="size-4 text-rose-400" /><span class="text-foreground font-semibold"
-                >{compact(totalLikes)}</span
-              > {plural(totalLikes, "like")}
-            </span>
-            {#if staffPicks > 0}
-              <span class="inline-flex items-center gap-1.5 text-amber-500">
-                <RiStarFill class="size-4" />{staffPicks} staff
-              </span>
+
+        <div class="w-full min-w-0 flex-1 space-y-1.5">
+          <div class="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <h1 class="font-heading text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
+              <FormattedText text={account.sonolus_username} />
+            </h1>
+            {#if role}
+              <span
+                class={cn(
+                  "rounded-md border px-2 py-0.5 text-xs font-bold",
+                  account.admin
+                    ? "border-rose-400/40 bg-rose-400/15 text-rose-700 dark:text-rose-300"
+                    : "border-teal-400/40 bg-teal-400/15 text-teal-700 dark:text-teal-300",
+                )}>{role}</span
+              >
             {/if}
           </div>
-        {/await}
+          <p class="text-muted-foreground text-sm tabular-nums">#{account.sonolus_handle}</p>
+        </div>
+
+        <div class="flex w-full gap-2 sm:w-auto sm:shrink-0">
+          <a
+            href={`/browse?sonolus_handle_is=${account.sonolus_handle}`}
+            class="bg-primary text-primary-foreground! inline-flex h-11 flex-1 items-center justify-center rounded-xl px-5 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90 sm:flex-none"
+          >
+            {t("userProfile.browseCharts")}
+          </a>
+          <button
+            type="button"
+            onclick={share}
+            class="hover:bg-muted inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors"
+          >
+            <RiShareLine class="block size-4" />
+            <span>{copied ? t("levelDetail.linkCopied") : t("levelDetail.share")}</span>
+          </button>
+        </div>
       </div>
+
+      <dl class="bg-border mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border sm:grid-cols-4">
+        {#await data.stats}
+          {#each ["userProfile.chartsPublished", "userProfile.likesReceived", "userProfile.commentsReceived", "userProfile.chartsLiked"] as label (label)}
+            <div class="bg-card px-4 py-2.5">
+              <dt class="text-muted-foreground text-xs">{t(label)}</dt>
+              <dd class="bg-muted mt-1.5 h-5 w-12 animate-pulse rounded"></dd>
+            </div>
+          {/each}
+        {:then stats}
+          <div class="bg-card px-4 py-2.5">
+            <dt class="text-muted-foreground text-xs">{t("userProfile.chartsPublished")}</dt>
+            <dd class="font-heading text-lg font-bold tabular-nums">{stats ? compact(stats.chartsPublished) : "–"}</dd>
+          </div>
+          <div class="bg-card px-4 py-2.5">
+            <dt class="text-muted-foreground text-xs">{t("userProfile.likesReceived")}</dt>
+            <dd class="font-heading inline-flex items-center gap-1.5 text-lg font-bold tabular-nums">
+              <RiHeart3Fill class="block size-4 text-rose-400" />{stats ? compact(stats.likesReceived) : "–"}
+            </dd>
+          </div>
+          <div class="bg-card px-4 py-2.5">
+            <dt class="text-muted-foreground text-xs">{t("userProfile.commentsReceived")}</dt>
+            <dd class="font-heading text-lg font-bold tabular-nums">{stats ? compact(stats.commentsReceived) : "–"}</dd>
+          </div>
+          <div class="bg-card px-4 py-2.5">
+            <dt class="text-muted-foreground text-xs">{t("userProfile.chartsLiked")}</dt>
+            <dd class="font-heading text-lg font-bold tabular-nums">{stats ? compact(stats.likedCharts) : "–"}</dd>
+          </div>
+        {/await}
+      </dl>
     </div>
   </section>
 
-  <!-- Their charts -->
-  <section class="space-y-4">
-    <h2 class="font-heading text-lg font-semibold tracking-tight">Charts</h2>
-    {#await data.charts}
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-        {#each Array(6) as _, i (i)}
-          <ChartSkeleton />
-        {/each}
-      </div>
-    {:then charts}
-      {#if charts.length}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {#each charts as chart (chart.id)}
-            <ChartCard {chart} />
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+    <aside class="space-y-6 lg:sticky lg:top-24 lg:order-last">
+      <section class="bg-card space-y-3 rounded-3xl border p-5">
+        <h2 class="font-heading text-base font-semibold tracking-tight">{t("userProfile.about")}</h2>
+        {#if account.description}
+          <p class="text-foreground/85 text-sm leading-relaxed wrap-break-word whitespace-pre-line">
+            <FormattedText text={account.description} linkify />
+          </p>
+        {:else}
+          <p class="text-muted-foreground text-sm">{t("userProfile.noBio")}</p>
+        {/if}
+      </section>
+    </aside>
+
+    <section class="bg-card min-w-0 space-y-4 rounded-3xl border p-4 sm:p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="font-heading text-lg font-semibold tracking-tight">{t("userProfile.chartsHeading")}</h2>
+        <div class="bg-muted inline-flex rounded-xl p-1" role="radiogroup" aria-label={t("userProfile.sortCharts")}>
+          {#each SORTS as s (s.key)}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={sort === s.key}
+              onclick={() => {
+                if (sort !== s.key) chartPage = 1;
+                sort = s.key;
+              }}
+              class={cn(
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                sort === s.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t(s.label)}
+            </button>
           {/each}
-          <a
-            href={`/browse?sonolus_handle_is=${account.sonolus_handle}`}
-            class="bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted grid min-h-44 place-items-center rounded-2xl border border-dashed transition-colors"
-          >
-            <span class="font-heading text-base font-semibold">View All</span>
-          </a>
         </div>
-      {:else}
-        <p class="text-muted-foreground rounded-2xl border border-dashed py-16 text-center text-sm">
-          No public charts yet.
-        </p>
-      {/if}
-    {/await}
-  </section>
+      </div>
+
+      {#await data.charts}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {#each Array(4) as _, i (i)}
+            <ChartSkeleton />
+          {/each}
+        </div>
+      {:then charts}
+        {#if charts.length}
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {#each pageSlice(charts) as chart (chart.id)}
+              <ChartCard {chart} />
+            {/each}
+          </div>
+          <Pager count={charts.length} perPage={PER_PAGE} bind:page={chartPage} />
+        {:else}
+          <div class="bg-muted/30 flex flex-col items-center gap-1.5 rounded-2xl px-4 py-10 text-center">
+            <div class="mb-2"><div class="overflow-hidden rounded-xl bg-slate-950 ring-1 ring-white/10"><img src="/art/empty-stage.svg" alt="" aria-hidden="true" class="block w-44" /></div></div>
+            <p class="text-sm font-medium">{t("userProfile.noPublicCharts")}</p>
+          </div>
+        {/if}
+      {/await}
+    </section>
+  </div>
 </main>
 
 <SiteFooter />

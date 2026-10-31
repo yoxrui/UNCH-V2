@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import type { Comment } from "$lib/data/index.js";
   import { relativeTime, profileUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
@@ -27,17 +28,17 @@
           <a
             href={`/creators/${c.account.sonolus_handle}`}
             class="text-muted-foreground/70! text-xs tabular-nums"
-          >@{c.account.sonolus_handle}</a>
+          >#{c.account.sonolus_handle}</a>
 
           {#if c.account.admin}
             <span
-              class="rounded border border-rose-400/40 bg-rose-400/15 px-1 py-px text-[9px] font-bold text-rose-600 dark:text-rose-300"
-              >ADMIN</span
+              class="rounded border border-rose-400/40 bg-rose-400/15 px-1 py-px text-[10px] font-bold text-rose-600 uppercase dark:text-rose-300"
+              >{t("userProfile.admin")}</span
             >
           {:else if c.account.mod}
             <span
-              class="rounded border border-violet-400/40 bg-violet-400/15 px-1 py-px text-[9px] font-bold text-violet-600 dark:text-violet-300"
-              >MOD</span
+              class="rounded border border-teal-400/40 bg-teal-400/15 px-1 py-px text-[10px] font-bold text-teal-700 uppercase dark:text-teal-300"
+              >{t("userProfile.mod")}</span
             >
           {/if}
           <span class="text-muted-foreground/70 text-xs">· {relativeTime(c.created_at)}</span>

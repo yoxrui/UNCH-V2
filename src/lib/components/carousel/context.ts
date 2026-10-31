@@ -7,10 +7,6 @@ export type CarouselOptions = {
   containScroll?: string;
 };
 
-/**
- * A minimal, Embla-compatible surface backed by native scroll-snap. Only the
- * methods actually used across the app are implemented.
- */
 export type CarouselApi = {
   scrollPrev: () => void;
   scrollNext: () => void;

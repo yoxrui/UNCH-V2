@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { page } from "$app/state";
   import SiteHeader from "$lib/components/site-header.svelte";
   import SiteFooter from "$lib/components/site-footer.svelte";
@@ -9,7 +10,7 @@
 </script>
 
 <svelte:head>
-  <title>{page.status} | UntitledCharts</title>
+  <title>{t("common.pageTitle", [page.status])}</title>
 </svelte:head>
 
 <SiteHeader />
@@ -19,18 +20,18 @@
     {page.status}
   </p>
   <h1 class="font-heading mt-2 text-2xl font-bold tracking-tight">
-    {isNotFound ? "Page not found" : "Something went wrong"}
+    {isNotFound ? t("error.pageNotFound2") : t("error.somethingWentWrong2")}
   </h1>
   <p class="text-muted-foreground mt-2 max-w-md text-sm">
     {page.error?.message ??
-      "We couldn't load that. Try heading back to the catalog."}
+      t("error.weCouldnTLoadThat")}
   </p>
   <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
     <Button href="/" class="rounded-full">
-      <RiHome5Line class="size-4" /> Home
+      <RiHome5Line class="size-4" /> {t("nav.home")}
     </Button>
     <Button href="/browse" variant="outline" class="rounded-full">
-      <RiCompass3Line class="size-4" /> Browse charts
+      <RiCompass3Line class="size-4" /> {t("error.browseCharts")}
     </Button>
   </div>
 </main>

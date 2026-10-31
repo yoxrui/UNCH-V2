@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import Button from "./button.svelte";
   import { RiFolder3Line, RiCompass3Line } from "$lib/icons.js";
 
   let {
-    title = "No collections yet",
-    message = "Save charts into folders to start building your library.",
+    title = t("dashboard.emptyTitle"),
+    message = t("dashboard.emptyMessage"),
     ctaHref = "/browse",
-    ctaLabel = "Browse charts",
+    ctaLabel = t("error.browseCharts"),
   }: {
     title?: string;
     message?: string;

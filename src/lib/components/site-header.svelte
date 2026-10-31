@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import Button from "$lib/components/button.svelte";
   import UserProfileNav from "$lib/components/user-profile-nav.svelte";
   import { cn } from "$lib/utils.js";
@@ -7,10 +8,8 @@
   import { RiSunLine, RiMoonLine } from "$lib/icons.js";
 
   const links = [
-    { label: "Home", href: "/" },
-    { label: "Browse", href: "/browse" },
-    { label: "Rankings", href: "/rankings" },
-    { label: "Creators", href: "/creators" },
+    { key: "nav.home", href: "/" },
+    { key: "nav.browse", href: "/browse" },
   ];
 
   function isActive(href: string) {
@@ -22,8 +21,7 @@
   <div
     class="bg-background/70 supports-backdrop-filter:bg-background/55 mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 rounded-full border px-3 pl-5 shadow-lg backdrop-blur-xl sm:px-4 sm:pl-6"
   >
-    <!-- Logo -->
-    <a href="/" class="flex items-center gap-2.5" aria-label="UntitledCharts home">
+    <a href="/" class="flex items-center gap-2.5" aria-label={t("nav.homeAria")}>
       <img
         src="/636a8f1e76b38cb1b9eb0a3d88d7df6f.png"
         alt=""
@@ -33,8 +31,7 @@
       <span class="font-heading text-sm font-semibold tracking-tight">UntitledCharts</span>
     </a>
 
-    <!-- Centered nav -->
-    <nav class="hidden items-center gap-7 md:flex" aria-label="Primary">
+    <nav class="hidden items-center gap-7 md:flex" aria-label={t("nav.primary")}>
       {#each links as link (link.href)}
         <a
           href={link.href}
@@ -46,18 +43,17 @@
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {link.label}
+          {t(link.key)}
         </a>
       {/each}
     </nav>
 
-    <!-- Right -->
     <div class="flex items-center gap-1.5">
       <Button
         variant="ghost"
         size="icon"
         onclick={toggleMode}
-        aria-label="Toggle dark mode"
+        aria-label={t("nav.toggleTheme")}
         class="text-muted-foreground hover:text-foreground rounded-full"
       >
         <RiSunLine class="hidden size-5 dark:block" />

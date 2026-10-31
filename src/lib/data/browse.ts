@@ -1,25 +1,26 @@
+import { t } from "$lib/i18n.svelte.js";
 import type { SortBy } from "./types.js";
 
 export type SearchType = "newest" | "random" | "quick" | "advanced";
 
 export const searchTypes: { value: SearchType; label: string }[] = [
-  { value: "newest", label: "Newest" },
-  { value: "quick", label: "Quick" },
-  { value: "advanced", label: "Advanced" },
-  { value: "random", label: "Random" },
+  { value: "newest", get label() { return t("search.newest"); } },
+  { value: "quick", get label() { return t("search.quick"); } },
+  { value: "advanced", get label() { return t("search.advanced"); } },
+  { value: "random", get label() { return t("search.random"); } },
 ];
 
 export const sortByOptions: { value: SortBy; label: string }[] = [
-  { value: "created_at", label: "Created Date" },
-  { value: "rating", label: "Rating" },
-  { value: "likes", label: "Likes" },
-  { value: "abc", label: "Alphabetical" },
-  { value: "decaying_likes", label: "Decaying Likes" },
+  { value: "created_at", get label() { return t("search.createdDate"); } },
+  { value: "rating", get label() { return t("search.rating"); } },
+  { value: "likes", get label() { return t("search.likes"); } },
+  { value: "abc", get label() { return t("search.alphabetical"); } },
+  { value: "decaying_likes", get label() { return t("search.decayingLikes"); } },
 ];
 
 export const orderOptions: { value: "asc" | "desc"; label: string }[] = [
-  { value: "desc", label: "Descending" },
-  { value: "asc", label: "Ascending" },
+  { value: "desc", get label() { return t("search.descending"); } },
+  { value: "asc", get label() { return t("search.ascending"); } },
 ];
 
 export type Filters = {

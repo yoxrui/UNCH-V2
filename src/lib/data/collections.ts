@@ -1,10 +1,4 @@
-/**
- * Mock folder-style collections for the frontend-only library.
- *
- * A `Collection` references charts by id (normalized, like a real API would),
- * resolved against `mockCharts`. Swap-in seam: replace `mockCollections` and the
- * resolvers with real data later — the UI reads only these helpers.
- */
+
 import type { Chart } from "./types.js";
 import { DIFFICULTIES, difficultyFromTags, type Difficulty } from "./format.js";
 import { mockChartsById } from "./mock-charts.js";
@@ -13,11 +7,11 @@ export type Collection = {
   id: string;
   name: string;
   description: string | null;
-  /** ids into `mockCharts` */
+
   chartIds: string[];
-  /** ISO timestamp */
+
   updatedAt: string;
-  /** small decorative glyph shown on the folder card */
+
   emoji?: string;
 };
 
@@ -80,21 +74,18 @@ export function listCollections(): Collection[] {
   return mockCollections;
 }
 
-/** Resolve a collection's chart ids to full `Chart` objects (missing ids dropped). */
 export function collectionCharts(c: Collection): Chart[] {
   return c.chartIds
     .map((id) => mockChartsById.get(id))
     .filter((x): x is Chart => x !== undefined);
 }
 
-/** Unique difficulties present in a set of charts, hardest first (for tag chips). */
 export function collectionDifficulties(charts: Chart[]): Difficulty[] {
   const present = new Set<Difficulty>();
   for (const c of charts) present.add(difficultyFromTags(c.tags, c.rating));
   return DIFFICULTIES.filter((d) => present.has(d)).reverse();
 }
 
-/** All saved charts across every collection, de-duped, newest-updated first. */
 export function savedCharts(): Chart[] {
   const seen = new Set<string>();
   const out: Chart[] = [];
@@ -116,7 +107,6 @@ export type DashboardStats = {
   played: number;
 };
 
-/** Headline numbers for the dashboard stat row. */
 export function dashboardStats(): DashboardStats {
   const saved = savedCharts();
   const creators = new Set(saved.map((c) => c.author_handle));
@@ -124,6 +114,6 @@ export function dashboardStats(): DashboardStats {
     saved: saved.length,
     collections: mockCollections.length,
     creators: creators.size,
-    played: 24, // mock "recently played" count
+    played: 24,
   };
 }

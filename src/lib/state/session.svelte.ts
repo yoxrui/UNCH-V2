@@ -22,6 +22,11 @@ class SessionState {
   user = $state<SessionUser | null>(null);
   loading = $state(true);
   pending = $state(false);
+  // set while a login is waiting on the Sonolus page; lets the UI reopen it if the browser blocked the popup
+  loginUrl = $state<string | null>(null);
+  popupBlocked = $state(false);
+  // true while a page shows its own "awaiting verification" state, so the login modal stays hidden
+  inlineLogin = $state(false);
 
   sessionKey: string | null = null;
 
@@ -52,11 +57,8 @@ class SessionState {
       if (!res.ok) return;
       const { id } = await res.json();
 
-      window.open(
-        `https://open.sonolus.com/external-login/${SONOLUS_HOST}/sonolus/authenticate_external?id=${id}`,
-        "_blank",
-        "noopener,noreferrer",
-      );
+      this.loginUrl = `https://open.sonolus.com/external-login/${SONOLUS_HOST}/sonolus/authenticate_external?id=${id}`;
+      this.openLoginWindow();
 
       const key = await this.pollForSession(id);
       if (!key) return;
@@ -65,17 +67,25 @@ class SessionState {
       localStorage.setItem(EXPIRY_KEY, String(Date.now() + WEEK_MS));
       await this.loadUser(key);
     } catch {
-      // button can simply be pressed again
     } finally {
       this.pending = false;
+      this.loginUrl = null;
+      this.popupBlocked = false;
     }
+  };
+
+  // no "noopener" here: with it, window.open always returns null and a blocked popup can't be detected
+  openLoginWindow = () => {
+    if (!this.loginUrl) return;
+    const win = window.open(this.loginUrl, "_blank");
+    if (win) win.opener = null;
+    this.popupBlocked = !win;
   };
 
   logout = () => {
     this.clear();
   };
 
-  // Stop the login poll early (Cancel button / Escape) and unblock login().
   cancelLogin = () => {
     this.finishPoll(null);
     this.pending = false;
@@ -109,7 +119,6 @@ class SessionState {
             this.finishPoll(session_key);
           }
         } catch {
-          // keep polling
         }
       }, 1000);
     });
@@ -141,7 +150,6 @@ class SessionState {
             if (typeof acc.description === "string") description = acc.description;
           }
         } catch {
-          // extra profile fields are optional
         }
       }
 
@@ -157,7 +165,6 @@ class SessionState {
       };
       this.isLoggedIn = true;
     } catch {
-      // network failure — stay logged out this load
     }
   };
 

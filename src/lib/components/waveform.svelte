@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from "$lib/i18n.svelte.js";
   let currentWave: { stop: () => void } | null = null;
   const peakCache = new Map<string, { peaks: number[][]; duration: number }>();
 </script>
@@ -14,18 +15,23 @@
     src = null,
     variant = "full",
     height,
+    lazy = false,
     class: className,
   }: {
     id: string;
     src?: string | null;
     variant?: "full" | "compact";
     height?: number;
+    // wait until scrolled into view before downloading the audio
+    lazy?: boolean;
     class?: string;
   } = $props();
 
   let container = $state<HTMLDivElement | null>(null);
   let playing = $state(false);
   let ready = $state(false);
+  // svelte-ignore state_referenced_locally
+  let visible = $state(!lazy);
 
   type WS = import("wavesurfer.js").default;
   let ws: WS | null = null;
@@ -96,12 +102,27 @@
   }
 
   $effect(() => {
+    if (visible || !container) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          visible = true;
+          io.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    io.observe(container);
+    return () => io.disconnect();
+  });
+
+  $effect(() => {
     src;
-    if (container) create();
+    if (container && visible) create();
   });
 
   onMount(() => {
-    const obs = new MutationObserver(() => create());
+    const obs = new MutationObserver(() => visible && create());
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     return () => {
@@ -119,7 +140,7 @@
     type="button"
     onclick={toggle}
     disabled={!src || !ready}
-    aria-label={playing ? "Pause" : "Play"}
+    aria-label={playing ? t("preview.pause") : t("preview.play")}
     aria-pressed={playing}
     class={cn(
       "grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-90 disabled:opacity-50 motion-reduce:active:scale-100",

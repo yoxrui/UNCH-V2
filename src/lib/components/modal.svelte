@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { cn } from "$lib/utils.js";
   import type { Snippet } from "svelte";
 
@@ -28,6 +29,6 @@
     {@render children?.()}
   </div>
   <form method="dialog" class="modal-backdrop">
-    <button aria-label="Close">close</button>
+    <button aria-label={t("common.close2")}>{t("common.close")}</button>
   </form>
 </dialog>

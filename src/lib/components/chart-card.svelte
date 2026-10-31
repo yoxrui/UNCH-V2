@@ -1,124 +1,76 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import type { Chart } from "$lib/data/index.js";
-  import { difficultyFromTags, compact, coverUrl, backgroundUrl, bgmProxyUrl } from "$lib/data/index.js";
+  import { compact, relativeTime, coverUrl, backgroundUrl, previewProxyUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
-  import DifficultyBadge from "./difficulty-badge.svelte";
+  import LevelBadge from "./level-badge.svelte";
   import Waveform from "./waveform.svelte";
   import FormattedText from "./formatted-text.svelte";
-  import { Spring } from "svelte/motion";
-  import { fly } from "svelte/transition";
-  import { cubicOut } from "svelte/easing";
-  import { RiHeart3Fill, RiChat3Line, RiStarFill } from "$lib/icons.js";
+  import { RiHeart3Fill, RiChat3Line, RiStarFill, RiTimeLine } from "$lib/icons.js";
 
   let { chart }: { chart: Chart } = $props();
-  const difficulty = $derived(difficultyFromTags(chart.tags, chart.rating));
 
-  let hovered = $state(false);
-  let everHovered = $state(false);
-  let reduced = false;
-
-  const lift = new Spring(0, { stiffness: 0.2, damping: 0.7 });
-  const heart = new Spring(1, { stiffness: 0.18, damping: 0.45 });
-
-  function enter() {
-    hovered = true;
-    everHovered = true;
-    if (reduced) return;
-    lift.target = -5;
-    heart.target = 1.28;
-  }
-  function leave() {
-    hovered = false;
-    lift.target = 0;
-    heart.target = 1;
-  }
-
-  $effect(() => {
-    reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-  });
+  const cover = $derived(coverUrl(chart));
+  const backdrop = $derived(backgroundUrl(chart));
 </script>
 
-<article
-  onmouseenter={enter}
-  onmouseleave={leave}
-  onfocusin={enter}
-  onfocusout={leave}
-  style="transform: translateY({lift.current}px)"
-  class="group bg-card relative flex h-full flex-col overflow-hidden rounded-2xl ring-1 ring-border/70 transition-[box-shadow,outline] duration-200 hover:shadow-lg hover:shadow-primary/5 hover:ring-primary/40"
->
-  <!-- banner + floating square cover -->
-  <div class="relative">
-    <div class="aspect-16/7 w-full overflow-hidden">
-      <CoverArt
-        id={`${chart.id}-bg`}
-        src={backgroundUrl(chart)}
-        rounded="rounded-none"
-        class="size-full transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
-      />
-      <div class="from-card absolute inset-0 bg-linear-to-t to-transparent"></div>
-    </div>
+<article class="group bg-card relative isolate flex h-full flex-col gap-2.5 overflow-hidden rounded-3xl p-2">
+  <!-- the cover, blurred, tints the card; the chart's background art sits behind the cover -->
+  {#if cover}
+    <span
+      class="absolute -inset-1/3 -z-20 bg-cover bg-center opacity-20 blur-2xl saturate-150 transition-opacity duration-250 group-hover:opacity-35 motion-reduce:transition-none"
+      style="background-image: url({cover})"
+    ></span>
+  {/if}
+  {#if backdrop}
+    <span
+      class="absolute inset-x-0 top-0 -z-10 h-2/5 bg-cover bg-center opacity-70 [mask-image:linear-gradient(to_bottom,black_35%,transparent)]"
+      style="background-image: url({backdrop})"
+    ></span>
+  {/if}
 
+  <div class="relative mx-auto mt-3 aspect-square w-[58%] shadow-[0_10px_22px_-10px_rgb(0_0_0/0.6)]">
     <CoverArt
       id={chart.id}
       title={chart.title}
-      src={coverUrl(chart)}
-      class="ring-card absolute bottom-0 left-4 size-16 translate-y-1/2 ring-4"
+      src={cover}
+      rounded="rounded-2xl"
+      class="size-full [&_img]:transition-transform [&_img]:duration-250 group-hover:[&_img]:scale-104 motion-reduce:[&_img]:transition-none"
     />
-
-    <div class="absolute top-3 right-3">
-      <DifficultyBadge {difficulty} level={chart.rating} />
-    </div>
-
-    {#if chart.staff_pick}
-      <span
-        class="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-100 backdrop-blur"
-      >
-        <RiStarFill class="size-2.5" /> STAFF
-      </span>
-    {/if}
-
-    {#if everHovered && hovered}
-      <div
-        transition:fly={{ y: 10, duration: 200, easing: cubicOut }}
-        class="bg-background/70 absolute right-2 bottom-2 left-24 z-10 rounded-lg px-2 py-1 shadow-sm backdrop-blur"
-      >
-        <Waveform id={chart.id} src={bgmProxyUrl(chart)} variant="compact" height={28} />
-      </div>
-    {/if}
+    <LevelBadge level={chart.rating} size="sm" onImage class="absolute top-1.5 left-1.5" />
   </div>
 
-  <!-- body -->
-  <div class="flex flex-1 flex-col gap-3 px-4 pt-9 pb-4">
-    <div class="min-w-0 space-y-1">
-      <h3 class="truncate text-base font-semibold tracking-tight">
-        <a
-          href={`/levels/UnCh-${chart.id}`}
-          class="hover:text-primary transition-colors after:absolute after:inset-0 after:content-['']"
-          ><FormattedText text={chart.title} /></a
-        >
-      </h3>
-      <p class="text-muted-foreground truncate text-sm"><FormattedText text={chart.artists} /></p>
-    </div>
+  {#if chart.staff_pick}
+    <span
+      class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-950"
+    >
+      <RiStarFill class="size-2.5" />
+      {t("common.staff")}
+    </span>
+  {/if}
 
-    <div class="text-muted-foreground mt-auto flex items-center justify-between gap-2 text-xs">
-      <a
-        href={`/creators/${chart.author_handle}`}
-        class="relative z-10 inline-flex min-w-0 items-center gap-1 truncate font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300"
-        >{chart.chart_design}</a
+  <div class="flex flex-1 flex-col px-2 pb-1.5">
+    <h3 class="truncate text-sm font-bold">
+      <a href={`/levels/UnCh-${chart.id}`} class="after:absolute after:inset-0 after:content-['']"
+        ><FormattedText text={chart.title} /></a
       >
-      <div class="flex shrink-0 items-center gap-3 tabular-nums">
-        <span class="inline-flex items-center gap-1">
-          <span
-            class="inline-flex origin-center"
-            style="transform: scale({heart.current})"
-          >
-            <RiHeart3Fill class="size-3.5 text-rose-400" />
-          </span>{compact(chart.like_count)}
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <RiChat3Line class="size-3.5" />{compact(chart.comment_count)}
-        </span>
-      </div>
+    </h3>
+    <p class="text-muted-foreground truncate text-xs"><FormattedText text={chart.artists} /></p>
+    <a
+      href={`/creators/${chart.author_handle}`}
+      class="text-accent relative z-10 mt-0.5 self-start truncate text-xs font-bold hover:underline"
+      >{chart.chart_design}</a
+    >
+
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy class="relative z-10 mt-2" />
+
+    <div class="min-h-2 flex-1"></div>
+    <div
+      class="border-foreground/10 text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-[11px] tabular-nums [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1"
+    >
+      <span><RiHeart3Fill class="size-3.5 text-rose-400" />{compact(chart.like_count)}</span>
+      <span><RiChat3Line class="size-3.5" />{compact(chart.comment_count)}</span>
+      <span><RiTimeLine class="size-3.5" />{relativeTime(chart.updated_at)}</span>
     </div>
   </div>
 </article>

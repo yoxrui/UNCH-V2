@@ -15,6 +15,8 @@ export default defineConfig({
       'wavesurfer.js',
       'mode-watcher',
     ],
+    // Only the /og server endpoints import these, and they load .wasm files the optimizer can't handle.
+    exclude: ['@cf-wasm/resvg', '@cf-wasm/satori'],
   },
   server: {
     warmup: {

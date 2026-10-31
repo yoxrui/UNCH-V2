@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import Button from "./button.svelte";
 
   let {
@@ -101,7 +102,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     role="application"
-    aria-label="Drag to reposition, use the slider to zoom"
+    aria-label={t("common.dragToRepositionUseThe")}
     class={`relative mx-auto touch-none overflow-hidden bg-black/50 ${round ? "rounded-full" : "rounded-xl"}`}
     style={`width:${BOX_W}px;height:${boxH}px`}
     onpointerdown={down}
@@ -132,12 +133,12 @@
     max="3"
     step="0.01"
     bind:value={zoom}
-    aria-label="Zoom"
+    aria-label={t("common.zoom")}
     class="range range-primary range-sm w-full"
   />
 
   <div class="flex justify-end gap-2">
-    <Button variant="outline" size="sm" onclick={oncancel} class="rounded-full">Cancel</Button>
-    <Button size="sm" onclick={apply} class="rounded-full">Apply</Button>
+    <Button variant="outline" size="sm" onclick={oncancel} class="rounded-full">{t("oauth.cancel")}</Button>
+    <Button size="sm" onclick={apply} class="rounded-full">{t("common.apply")}</Button>
   </div>
 </div>

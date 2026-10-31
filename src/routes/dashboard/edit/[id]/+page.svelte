@@ -1,25 +1,46 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { t } from "$lib/i18n.svelte.js";
+  import { cn } from "$lib/utils.js";
+  import PublicChecklist from "$lib/components/public-checklist.svelte";
+  import { goto, afterNavigate } from "$app/navigation";
+  import { tick } from "svelte";
   import Button from "$lib/components/button.svelte";
   import Select from "$lib/components/select.svelte";
   import EmojiTextarea from "$lib/components/emoji-textarea.svelte";
+  import TagSuggestions from "$lib/components/tag-suggestions.svelte";
   import { session } from "$lib/state/session.svelte";
   import { editChart, type EditData, coverUrl, backgroundUrl } from "$lib/data/index.js";
-  import { RiArrowLeftLine, RiEditLine, RiMusic2Line, RiFileMusicLine, RiFileList3Line } from "$lib/icons.js";
+  import Modal from "$lib/components/modal.svelte";
+  import {
+    RiArrowLeftLine,
+    RiEditLine,
+    RiMusic2Line,
+    RiFileMusicLine,
+    RiFileCodeLine,
+    RiImageLine,
+    RiDeleteBinLine,
+    RiArrowGoBackLine,
+  } from "$lib/icons.js";
 
   let { data } = $props();
 
   // svelte-ignore state_referenced_locally
   const chart = data.chart;
 
+  // Cancel returns to wherever the editor was opened from; a direct visit falls back to the dashboard
+  let cancelHref = $state("/dashboard");
+  afterNavigate(({ from }) => {
+    if (from?.url) cancelHref = from.url.pathname + from.url.search;
+  });
+
   const user = $derived(session.user);
   const isOwner = $derived(!user || user.handle === chart.author_handle);
 
   type Visibility = "PUBLIC" | "UNLISTED" | "PRIVATE";
   const visibilityOptions: { value: Visibility; label: string }[] = [
-    { value: "PUBLIC", label: "Public" },
-    { value: "UNLISTED", label: "Unlisted" },
-    { value: "PRIVATE", label: "Private" },
+    { value: "PUBLIC", get label() { return t("dashboard.statusPublic"); } },
+    { value: "UNLISTED", get label() { return t("dashboard.statusUnlisted"); } },
+    { value: "PRIVATE", get label() { return t("dashboard.statusPrivate"); } },
   ];
 
   let title = $state(chart.title);
@@ -37,9 +58,41 @@
   let backgroundFile = $state<File | null>(null);
   let removePreview = $state(false);
   let removeBackground = $state(false);
+  let pendingDelete = $state<"preview" | "background" | null>(null);
+  let confirmOpen = $state(false);
+
+  function askDelete(target: "preview" | "background") {
+    pendingDelete = target;
+    confirmOpen = true;
+  }
+
+  function confirmDelete() {
+    if (pendingDelete === "preview") {
+      removePreview = true;
+      previewFile = null;
+    } else if (pendingDelete === "background") {
+      removeBackground = true;
+      backgroundFile = null;
+    }
+    confirmOpen = false;
+  }
 
   let submitting = $state(false);
   let error = $state<string | null>(null);
+  let confirmed = $state(false);
+  let checklistInvalid = $state(false);
+  let checklist = $state<{ focusFirst: () => void } | null>(null);
+  let errorBox = $state<HTMLDivElement | null>(null);
+  const wasPublic = chart.status === "PUBLIC";
+  const needsConfirm = $derived(visibility === "PUBLIC" && !wasPublic);
+  const visibilityHint = $derived(t(`dashboard.visibilityHint${visibility}`));
+
+  async function fail(message: string) {
+    error = message;
+    await tick();
+    errorBox?.scrollIntoView({ behavior: "smooth", block: "center" });
+    errorBox?.focus({ preventScroll: true });
+  }
 
   function pick(e: Event): File | null {
     const target = e.target as HTMLInputElement;
@@ -51,20 +104,22 @@
   const currentBackground = $derived(backgroundUrl(chart));
 
   const inputClass =
-    "bg-card focus-visible:ring-ring/50 h-10 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2";
+    "bg-background focus-visible:ring-ring/50 h-10 w-full rounded-xl border px-3 text-sm outline-none focus-visible:ring-2";
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
     error = null;
 
+    checklistInvalid = false;
+
     const key = session.sessionKey;
-    if (!key) {
-      error = "You need to be logged in to edit.";
-      return;
-    }
+    if (!key) return fail(t("edit.loginRequired"));
     const r = parseInt(rating, 10);
-    if (Number.isNaN(r)) {
-      error = "Rating must be a number.";
+    if (Number.isNaN(r)) return fail(t("upload.ratingNumber"));
+    if (needsConfirm && !confirmed) {
+      checklistInvalid = true;
+      await tick();
+      checklist?.focusFirst();
       return;
     }
 
@@ -106,13 +161,13 @@
     if (res.ok) {
       goto(`/levels/UnCh-${chart.id}`);
     } else {
-      error = res.error;
+      await fail(res.error);
     }
   }
 </script>
 
 <svelte:head>
-  <title>Edit {chart.title} | UntitledCharts</title>
+  <title>{t("edit.editUntitledcharts", [chart.title])}</title>
 </svelte:head>
 
 <main class="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -123,29 +178,30 @@
     <RiArrowLeftLine
       class="size-4 transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none"
     />
-    Dashboard
+    {t("nav.dashboard")}
   </a>
 
   <header class="space-y-1">
-    <h1 class="font-heading inline-flex items-center gap-2 text-2xl font-bold tracking-tight">
-      <RiEditLine class="text-primary size-6" />
-      Edit chart
-    </h1>
-    <p class="text-muted-foreground text-sm">Update details or replace files. Leave a file empty to keep the current one.</p>
+    <h1 class="font-heading text-2xl font-bold tracking-tight">{t("levelDetail.editChart")}</h1>
+    <p class="text-muted-foreground text-sm">{t("edit.updateDetailsOrReplaceFiles")}</p>
   </header>
 
   {#if !isOwner}
     <div
       class="rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
     >
-      This isn't one of your charts, the server will reject changes.
+      {t("edit.thisIsnTOneOf")}
     </div>
   {/if}
 
   {#if error}
     <div
-      class="rounded-xl border border-rose-400/40 bg-rose-400/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-300"
+      bind:this={errorBox}
+      tabindex="-1"
+      role="alert"
+      class="rounded-xl border border-rose-400/40 bg-rose-400/10 px-4 py-3 text-sm text-rose-600 outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50 dark:text-rose-300"
     >
+      <span class="font-semibold">{t("upload.errorSummary")}</span>
       {error}
     </div>
   {/if}
@@ -158,140 +214,201 @@
     thumb: string | null;
     icon: typeof RiMusic2Line;
     currentLabel: string;
+    removed?: boolean;
+    onDelete?: () => void;
+    onUndo?: () => void;
   })}
     {@const Icon = o.icon}
     <div class="space-y-1.5">
       <span class="text-sm font-medium">{o.label}</span>
-      <label
-        class="bg-card hover:bg-accent/40 flex cursor-pointer items-center gap-3 rounded-xl border p-2.5 transition-colors"
-      >
-        <input type="file" accept={o.accept} onchange={o.onchange} class="hidden" />
-        <div class="bg-muted grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg">
-          {#if o.thumb}
-            <img src={o.thumb} alt="" class="size-full object-cover" />
-          {:else}
-            <Icon class="text-muted-foreground size-5" />
-          {/if}
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-medium">{o.selected ? o.selected.name : o.currentLabel}</p>
-          <p class="text-muted-foreground truncate text-xs">
-            {o.selected ? "New file selected" : "Click Replace to change"}
-          </p>
-        </div>
-        <span
-          class="bg-primary text-primary-foreground shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
-          >Replace</span
-        >
-      </label>
+      <div class="bg-background flex items-center gap-2 rounded-xl border p-2.5">
+        <label class="hover:bg-accent/40 -m-1 flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg p-1 transition-colors">
+          <input type="file" accept={o.accept} onchange={o.onchange} class="sr-only" />
+          <div class="bg-muted grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg">
+            {#if o.thumb && !o.removed}
+              <img src={o.thumb} alt="" class="size-full object-cover" />
+            {:else}
+              <Icon class="text-muted-foreground size-5" />
+            {/if}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class={cn("truncate text-sm font-medium", o.removed && "text-muted-foreground line-through")}>
+              {o.selected ? o.selected.name : o.currentLabel}
+            </p>
+            <p class={cn("truncate text-xs", o.removed ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground")}>
+              {o.selected ? t("edit.newFileSelected") : o.removed ? t("edit.willBeRemoved") : t("edit.clickReplaceToChange")}
+            </p>
+          </div>
+          <span class="bg-primary text-primary-foreground shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold">
+            {t("edit.replace")}
+          </span>
+        </label>
+        {#if o.removed && o.onUndo}
+          <button
+            type="button"
+            onclick={o.onUndo}
+            class="hover:bg-muted inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors"
+          >
+            <RiArrowGoBackLine class="size-3.5" />
+            {t("common.undo")}
+          </button>
+        {:else if o.onDelete && !o.selected}
+          <button
+            type="button"
+            onclick={o.onDelete}
+            aria-label={t("edit.deleteFile", [o.label])}
+            class="inline-flex shrink-0 items-center gap-1 rounded-full border border-rose-500/30 px-3 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-500/10 dark:text-rose-400"
+          >
+            <RiDeleteBinLine class="size-3.5" />
+            {t("edit.delete")}
+          </button>
+        {/if}
+      </div>
     </div>
   {/snippet}
 
   <form onsubmit={submit} class="space-y-6">
-    <div class="grid gap-4 sm:grid-cols-2">
-      <label class="space-y-1">
-        <span class="text-sm font-medium">Title</span>
-        <input type="text" bind:value={title} required class={inputClass} />
-      </label>
-      <label class="space-y-1">
-        <span class="text-sm font-medium">Artists</span>
-        <input type="text" bind:value={artists} required class={inputClass} />
-      </label>
-      <label class="space-y-1">
-        <span class="text-sm font-medium">Charter</span>
-        <input type="text" bind:value={author} required class={inputClass} />
-      </label>
-      <label class="space-y-1">
-        <span class="text-sm font-medium">Rating</span>
-        <input type="number" min="1" max="99" bind:value={rating} required class={inputClass} />
-      </label>
-      <label class="space-y-1">
-        <span class="text-sm font-medium">Tags</span>
-        <input type="text" bind:value={tags} class={inputClass} placeholder="Comma-separated" />
-      </label>
-      <div class="space-y-1">
-        <span class="text-sm font-medium">Visibility</span>
-        <Select bind:value={visibility} options={visibilityOptions} ariaLabel="Visibility" class="w-full" />
+    <fieldset class="bg-card clear-both rounded-2xl border p-5">
+      <legend class="float-left mb-4 w-full text-base font-semibold">{t("upload.sectionDetails")}</legend>
+      <div class="clear-both grid gap-4 sm:grid-cols-2">
+        <label class="space-y-1.5">
+          <span class="text-sm font-medium">{t("edit.title")}</span>
+          <input type="text" bind:value={title} required class={inputClass} />
+        </label>
+        <label class="space-y-1.5">
+          <span class="text-sm font-medium">{t("edit.artists")}</span>
+          <input type="text" bind:value={artists} required class={inputClass} />
+        </label>
+        <label class="space-y-1.5">
+          <span class="text-sm font-medium">{t("edit.charter")}</span>
+          <input type="text" bind:value={author} required class={inputClass} />
+        </label>
+        <label class="space-y-1.5">
+          <span class="text-sm font-medium">{t("search.rating")}</span>
+          <input type="number" inputmode="numeric" min="1" max="99" bind:value={rating} required class={inputClass} />
+        </label>
+        <div class="space-y-1.5 sm:col-span-2">
+          <label class="block space-y-1.5">
+            <span class="text-sm font-medium">{t("search.tags")} <span class="text-muted-foreground font-normal">{t("upload.optional")}</span></span>
+            <input type="text" bind:value={tags} class={inputClass} placeholder={t("search.tagsPlaceholder")} />
+          </label>
+          <TagSuggestions bind:value={tags} />
+        </div>
+        <div class="space-y-1.5 sm:col-span-2">
+          <span class="text-sm font-medium">{t("levelDetail.description")} <span class="text-muted-foreground font-normal">{t("upload.optional")}</span></span>
+          <EmojiTextarea
+            bind:value={description}
+            rows={4}
+            class="bg-background focus-visible:ring-ring/50 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus-visible:ring-2"
+            placeholder={t("edit.typeForEmojis")}
+          />
+        </div>
       </div>
-    </div>
+    </fieldset>
 
-    <div class="space-y-1">
-      <span class="text-sm font-medium">Description</span>
-      <EmojiTextarea
-        bind:value={description}
-        rows={4}
-        class="bg-card focus-visible:ring-ring/50 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus-visible:ring-2"
-        placeholder="Type : for emojis"
-      />
-    </div>
-
-    <div class="grid gap-4 sm:grid-cols-2">
+    <fieldset class="bg-card clear-both rounded-2xl border p-5">
+      <legend class="float-left mb-4 w-full text-base font-semibold">{t("upload.sectionFiles")}</legend>
+      <div class="clear-both grid gap-4 sm:grid-cols-2">
       {@render fileField({
-        label: "Cover image",
+        label: t("upload.coverImage"),
         accept: "image/*",
         onchange: (e) => (jacketFile = pick(e)),
         selected: jacketFile,
         thumb: jacketPreview ?? coverUrl(chart),
-        icon: RiFileList3Line,
-        currentLabel: "Current cover",
+        icon: RiImageLine,
+        currentLabel: t("edit.currentCover"),
       })}
       {@render fileField({
-        label: "Background image",
+        label: t("upload.backgroundImage"),
         accept: "image/*",
-        onchange: (e) => (backgroundFile = pick(e)),
+        onchange: (e) => {
+          backgroundFile = pick(e);
+          if (backgroundFile) removeBackground = false;
+        },
         selected: backgroundFile,
-        thumb: backgroundPreview ?? currentBackground,
-        icon: RiFileList3Line,
-        currentLabel: currentBackground ? "Current background" : "No background set",
+        thumb: backgroundPreview ?? (chart.custom_background ? currentBackground : null),
+        icon: RiImageLine,
+        currentLabel: chart.custom_background ? t("edit.currentBackground") : t("edit.noBackgroundSet"),
+        removed: removeBackground,
+        onDelete: chart.custom_background ? () => askDelete("background") : undefined,
+        onUndo: () => (removeBackground = false),
       })}
       {@render fileField({
-        label: "Chart file",
+        label: t("upload.chartFile"),
         accept: "",
         onchange: (e) => (chartFile = pick(e)),
         selected: chartFile,
         thumb: null,
-        icon: RiFileList3Line,
-        currentLabel: "Current chart file",
+        icon: RiFileCodeLine,
+        currentLabel: t("edit.currentChartFile"),
       })}
       {@render fileField({
-        label: "Music file",
+        label: t("upload.musicFile"),
         accept: "audio/*",
         onchange: (e) => (audioFile = pick(e)),
         selected: audioFile,
         thumb: null,
         icon: RiFileMusicLine,
-        currentLabel: "Current music file",
+        currentLabel: t("edit.currentMusicFile"),
       })}
       {@render fileField({
-        label: "Audio preview",
+        label: t("upload.audioPreview"),
         accept: "audio/*",
-        onchange: (e) => (previewFile = pick(e)),
+        onchange: (e) => {
+          previewFile = pick(e);
+          if (previewFile) removePreview = false;
+        },
         selected: previewFile,
         thumb: null,
         icon: RiMusic2Line,
-        currentLabel: "Current audio preview",
+        currentLabel: chart.preview_file_hash ? t("edit.currentAudioPreview") : t("edit.noPreviewSet"),
+        removed: removePreview,
+        onDelete: chart.preview_file_hash ? () => askDelete("preview") : undefined,
+        onUndo: () => (removePreview = false),
       })}
-    </div>
+      </div>
+    </fieldset>
 
-    <div class="flex flex-wrap gap-x-6 gap-y-2">
-      <label class="inline-flex items-center gap-2 text-sm">
-        <input type="checkbox" bind:checked={removePreview} class="checkbox checkbox-sm" />
-        Remove audio preview
-      </label>
-      <label class="inline-flex items-center gap-2 text-sm">
-        <input type="checkbox" bind:checked={removeBackground} class="checkbox checkbox-sm" />
-        Remove background image
-      </label>
-    </div>
+    <fieldset class="bg-card clear-both rounded-2xl border p-5">
+      <legend class="float-left mb-4 w-full text-base font-semibold">{t("dashboard.visibility")}</legend>
+      <div class="clear-both max-w-xs space-y-1.5">
+        <Select bind:value={visibility} options={visibilityOptions} ariaLabel={t("dashboard.visibility")} class="w-full" />
+        <p class="text-muted-foreground text-xs">{visibilityHint}</p>
+      </div>
+    </fieldset>
 
-    <div class="flex justify-end gap-3 pt-2">
-      <Button href={`/levels/UnCh-${chart.id}`} variant="outline" type="button" class="rounded-full">
-        Cancel
+    {#if needsConfirm}
+      <PublicChecklist bind:this={checklist} bind:complete={confirmed} invalid={checklistInvalid} />
+    {/if}
+
+    <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+      <Button href={cancelHref} variant="outline" type="button" class="rounded-full">
+        {t("oauth.cancel")}
       </Button>
       <Button type="submit" disabled={submitting} class="rounded-full">
         <RiEditLine class="size-4" />
-        {submitting ? "Saving…" : "Save changes"}
+        {submitting ? t("edit.saving") : needsConfirm ? t("edit.saveAndPublish") : t("edit.saveChanges")}
       </Button>
     </div>
   </form>
 </main>
+
+<Modal bind:open={confirmOpen}>
+  <div role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-body" class="space-y-4 p-1">
+    <div class="space-y-1.5">
+      <h2 id="delete-title" class="font-heading text-lg font-semibold">
+        {pendingDelete === "preview" ? t("edit.deletePreviewTitle") : t("edit.deleteBackgroundTitle")}
+      </h2>
+      <p id="delete-body" class="text-muted-foreground text-sm">{t("edit.deleteBody")}</p>
+    </div>
+    <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Button variant="outline" type="button" class="rounded-full" onclick={() => (confirmOpen = false)}>
+        {t("oauth.cancel")}
+      </Button>
+      <Button type="button" class="rounded-full border-rose-600 bg-rose-600 text-white hover:bg-rose-700" onclick={confirmDelete}>
+        <RiDeleteBinLine class="size-4" />
+        {t("edit.delete")}
+      </Button>
+    </div>
+  </div>
+</Modal>

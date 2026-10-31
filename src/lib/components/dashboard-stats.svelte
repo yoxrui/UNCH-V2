@@ -1,14 +1,15 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { compact, type DashboardStats } from "$lib/data/index.js";
   import { RiBookmarkLine, RiFolder3Line, RiTeamLine, RiTimeLine } from "$lib/icons.js";
 
   let { stats }: { stats: DashboardStats } = $props();
 
   const items = $derived([
-    { label: "Saved charts", value: stats.saved, icon: RiBookmarkLine, tint: "text-rose-400" },
-    { label: "Collections", value: stats.collections, icon: RiFolder3Line, tint: "text-primary" },
-    { label: "Favorite creators", value: stats.creators, icon: RiTeamLine, tint: "text-sky-400" },
-    { label: "Recently played", value: stats.played, icon: RiTimeLine, tint: "text-amber-400" },
+    { get label() { return t("dashboard.statSaved"); }, value: stats.saved, icon: RiBookmarkLine, tint: "text-rose-400" },
+    { get label() { return t("dashboard.statCollections"); }, value: stats.collections, icon: RiFolder3Line, tint: "text-primary" },
+    { get label() { return t("dashboard.statCreators"); }, value: stats.creators, icon: RiTeamLine, tint: "text-sky-400" },
+    { get label() { return t("dashboard.statPlayed"); }, value: stats.played, icon: RiTimeLine, tint: "text-amber-400" },
   ]);
 </script>
 

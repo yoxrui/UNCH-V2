@@ -47,7 +47,7 @@
         src={part.src}
         alt={`:${part.name}:`}
         title={`:${part.name}:`}
-        class="inline-block size-[1.4em] align-text-bottom"
+        class="mx-[0.1em] inline-block size-[1.8em] object-contain align-[-0.5em]"
         loading="lazy"
         decoding="async"
       />

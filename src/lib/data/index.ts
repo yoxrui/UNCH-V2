@@ -1,4 +1,3 @@
-/** Barrel for the data layer (types + live API + formatting helpers). */
 export * from "./types.js";
 export * from "./format.js";
 export * from "./assets.js";
@@ -7,3 +6,4 @@ export * from "./emojis.js";
 export * from "./browse.js";
 export * from "./mock-charts.js";
 export * from "./collections.js";
+export * from "./notifications.js";

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import ChartCollectionView from "$lib/components/chart-collection-view.svelte";
   import Button from "$lib/components/button.svelte";
   import { savedCharts } from "$lib/data/index.js";
@@ -8,7 +9,7 @@
 </script>
 
 <svelte:head>
-  <title>Library | UntitledCharts</title>
+  <title>{t("library.libraryUntitledcharts")}</title>
 </svelte:head>
 
 <main class="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -19,22 +20,21 @@
     <RiArrowLeftLine
       class="size-4 transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none"
     />
-    Dashboard
+    {t("nav.dashboard")}
   </a>
 
   <header class="space-y-1">
     <h1 class="font-heading inline-flex items-center gap-2 text-2xl font-bold tracking-tight">
       <RiBookmarkLine class="text-primary size-6" />
-      Library
+      {t("library.library")}
     </h1>
     <p class="text-muted-foreground text-sm">
-      {charts.length} saved charts across all your collections.
+      {t("library.savedChartsAcrossAllYour", [charts.length])}
     </p>
   </header>
 
-  <ChartCollectionView {charts} emptyMessage="You haven't saved any charts yet." />
+  <ChartCollectionView {charts} emptyMessage={t("library.empty")} />
 
-  <!-- Continue browsing -->
   <section
     class="from-primary/12 via-card to-card ring-border/70 relative overflow-hidden rounded-3xl border bg-linear-to-br p-6 ring-1 sm:p-8"
   >
@@ -43,15 +43,15 @@
     >
       <div class="space-y-1">
         <h2 class="font-heading text-lg font-semibold tracking-tight sm:text-xl">
-          Looking for something new?
+          {t("library.lookingForSomethingNew")}
         </h2>
         <p class="text-muted-foreground text-sm">
-          Discover fresh charts and staff picks from the community.
+          {t("library.discoverFreshChartsAndStaff")}
         </p>
       </div>
       <Button href="/browse" class="shrink-0 rounded-full">
         <RiCompass3Line class="size-4" />
-        Continue browsing
+        {t("library.continueBrowsing")}
       </Button>
     </div>
   </section>

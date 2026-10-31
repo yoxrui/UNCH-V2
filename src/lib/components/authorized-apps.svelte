@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import Button from "./button.svelte";
   import { session } from "$lib/state/session.svelte";
   import { API_URL } from "$lib/data/index.js";
   import { RiCheckLine, RiDeleteBinLine } from "$lib/icons.js";
+  import Modal from "./modal.svelte";
 
   type Scope = { scope: string; description?: string };
   type AuthorizedApp = {
@@ -28,9 +30,23 @@
       if (!res.ok) throw new Error("failed");
       apps = await res.json();
     } catch {
-      error = "Couldn't load your authorized apps.";
+      error = t("oauth.loadFailed");
       apps = [];
     }
+  }
+
+  let pendingRevoke = $state<{ client_id: string; name: string } | null>(null);
+  let revokeOpen = $state(false);
+
+  function askRevoke(app: { client_id: string; name: string }) {
+    pendingRevoke = { client_id: app.client_id, name: app.name };
+    revokeOpen = true;
+  }
+
+  function confirmRevoke() {
+    const target = pendingRevoke;
+    revokeOpen = false;
+    if (target) revoke(target.client_id);
   }
 
   async function revoke(clientId: string) {
@@ -45,7 +61,7 @@
       if (!res.ok) throw new Error("failed");
       await loadApps(key);
     } catch {
-      error = "Couldn't revoke that app.";
+      error = t("oauth.revokeFailed");
     }
     revoking = null;
   }
@@ -69,9 +85,9 @@
 
 <section class="bg-card ring-border/70 space-y-4 rounded-2xl border p-5 ring-1">
   <div class="space-y-0.5">
-    <h2 class="font-heading font-semibold">Authorized apps</h2>
+    <h2 class="font-heading font-semibold">{t("oauth.authorizedApps")}</h2>
     <p class="text-muted-foreground text-sm">
-      Apps you've given access to your account. Revoking takes effect immediately.
+      {t("oauth.authorizedSubtitle")}
     </p>
   </div>
 
@@ -87,7 +103,7 @@
     </div>
   {:else if apps.length === 0}
     <p class="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
-      You haven't authorized any apps yet.
+      {t("oauth.noApps")}
     </p>
   {:else}
     <ul class="space-y-3">
@@ -101,14 +117,14 @@
               {/if}
             </div>
             <Button
-              onclick={() => revoke(a.client_id)}
+              onclick={() => askRevoke(a)}
               disabled={revoking === a.client_id}
               variant="destructive"
               size="sm"
               class="shrink-0 rounded-full"
             >
               <RiDeleteBinLine class="size-4" />
-              {revoking === a.client_id ? "Revoking…" : "Revoke"}
+              {revoking === a.client_id ? t("oauth.revoking2") : t("oauth.revoke2")}
             </Button>
           </div>
 
@@ -124,9 +140,25 @@
             {/each}
           </ul>
 
-          <p class="text-muted-foreground/70 text-xs">Authorized on {formatDate(a.authorized_at)}</p>
+          <p class="text-muted-foreground/70 text-xs">{t("oauth.authorizedOn2", [formatDate(a.authorized_at)])}</p>
         </li>
       {/each}
     </ul>
   {/if}
 </section>
+
+<Modal bind:open={revokeOpen}>
+  <div role="alertdialog" aria-labelledby="revoke-title" aria-describedby="revoke-body" class="space-y-4 p-1">
+    <div class="space-y-1.5">
+      <h2 id="revoke-title" class="font-heading text-lg font-semibold">{t("oauth.revokeTitle", [pendingRevoke?.name ?? ""])}</h2>
+      <p id="revoke-body" class="text-muted-foreground text-sm">{t("oauth.revokeBody", [pendingRevoke?.name ?? ""])}</p>
+    </div>
+    <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Button variant="outline" type="button" class="rounded-full" onclick={() => (revokeOpen = false)}>{t("oauth.cancel")}</Button>
+      <Button type="button" class="rounded-full border-rose-600 bg-rose-600 text-white hover:bg-rose-700" onclick={confirmRevoke}>
+        <RiDeleteBinLine class="size-4" />
+        {t("oauth.revoke2")}
+      </Button>
+    </div>
+  </div>
+</Modal>

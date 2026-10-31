@@ -1,18 +1,18 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { RiGithubFill, RiDiscordFill } from "$lib/icons.js";
+  import LanguageSelect from "$lib/components/language-select.svelte";
 
   const groups = [
     {
-      heading: "Browse",
+      heading: "footer.browse",
       links: [
-        { label: "All charts", href: "/browse" },
-        { label: "Rankings", href: "/rankings" },
-        { label: "Creators", href: "/creators" },
+        { label: "footer.allCharts", href: "/browse" },
       ],
     },
     {
-      heading: "Legal",
-      links: [{ label: "DMCA & Copyright", href: "/dmca" }],
+      heading: "footer.legal",
+      links: [{ label: "footer.dmca", href: "/dmca" }],
     },
   ];
 </script>
@@ -35,13 +35,13 @@
         >
       </div>
       <p class="text-xs leading-relaxed">
-        A community catalog of Sonolus rhythm-game fan-charts.
+        {t("footer.tagline")}
       </p>
       <a
         href="https://open.sonolus.com/untitledcharts.com/"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90"
+        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white! transition-all hover:opacity-90"
         style="background: #000; border: 1px solid rgba(255,255,255,0.1)"
       >
         <svg
@@ -57,19 +57,19 @@
             fill="currentColor"
           ></path>
         </svg>
-        Open in Sonolus
+        {t("footer.openInSonolus")}
       </a>
     </div>
 
     <div class="flex gap-12">
       {#each groups as group (group.heading)}
-        <nav class="space-y-2" aria-label={group.heading}>
-          <p class="text-foreground text-xs font-semibold">{group.heading}</p>
+        <nav class="space-y-2" aria-label={t(group.heading)}>
+          <p class="text-foreground text-xs font-semibold">{t(group.heading)}</p>
           <ul class="space-y-1.5">
             {#each group.links as link (link.href)}
               <li>
                 <a href={link.href} class="hover:text-foreground text-xs transition-colors"
-                  >{link.label}</a
+                  >{t(link.label)}</a
                 >
               </li>
             {/each}
@@ -82,8 +82,9 @@
   <div
     class="border-border/60 text-muted-foreground/70 mx-auto flex max-w-7xl items-center justify-between gap-4 border-t px-4 py-4 text-[11px] sm:px-6"
   >
-    <span>© {new Date().getFullYear()} UntitledCharts</span>
+    <span>{t("footer.copyright", [new Date().getFullYear()])}</span>
     <div class="flex items-center gap-2">
+      <LanguageSelect up class="w-44" />
       <a
         href="https://discord.com/invite/untitledcharts"
         target="_blank"

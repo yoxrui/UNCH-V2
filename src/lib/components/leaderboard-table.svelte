@@ -1,121 +1,210 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import type { ScoreEntry, LeaderboardType } from "$lib/data/index.js";
-  import { grouped, gradeBadge, leaderboardMeta } from "$lib/data/index.js";
+  import { grouped, leaderboardMeta, formatAccuracy, profileUrl, relativeTime, replayName } from "$lib/data/index.js";
+  import { RiPlayFill } from "$lib/icons.js";
+  import { session } from "$lib/state/session.svelte";
   import { cn } from "$lib/utils.js";
 
   let {
     entries,
     type,
     startRank = 1,
-  }: { entries: ScoreEntry[]; type: LeaderboardType; startRank?: number } = $props();
+    bg = null,
+  }: { entries: ScoreEntry[]; type: LeaderboardType; startRank?: number; bg?: string | null } = $props();
 
-  const primaryLabel = $derived(
+  // the #1 entry gets its own block on the first page; everything else is a row
+  const top = $derived(startRank === 1 ? entries[0] : undefined);
+  const rows = $derived(top ? entries.slice(1) : entries);
+  const rowStart = $derived(top ? startRank + 1 : startRank);
+
+  const myHandle = $derived(session.user?.handle);
+
+  type Col = "score" | "accuracy" | "perfect" | "miss" | "breaks";
+  const focus = $derived<Col>(
     type === "accuracy_score"
-      ? "Accuracy"
-      : type === "least_combo_breaks"
-        ? "Breaks"
+      ? "accuracy"
+      : type === "perfect"
+        ? "perfect"
         : type === "least_misses"
-          ? "Misses"
-          : type === "perfect"
-            ? "Perfect"
-            : "Score",
+          ? "miss"
+          : type === "least_combo_breaks"
+            ? "breaks"
+            : "score",
   );
 
-  function primary(e: ScoreEntry): string {
-    switch (type) {
-      case "accuracy_score":
-        return grouped(e.accuracy_score);
-      case "least_combo_breaks":
-        return `${e.ngood + e.nmiss}`;
-      case "least_misses":
-        return `${e.nmiss}`;
-      case "perfect":
-        return grouped(e.nperfect);
-      default:
-        return grouped(e.arcade_score);
-    }
+  const GRADES: Record<string, { label: string; cls: string }> = {
+    allPerfect: { label: "AP", cls: "from-amber-300 via-yellow-400 to-amber-600" },
+    fullPerfect: { label: "AP", cls: "from-amber-300 via-yellow-400 to-amber-600" },
+    fullCombo: { label: "FC", cls: "from-cyan-300 via-sky-400 to-blue-500" },
+    clear: { label: "CLR", cls: "from-slate-400 to-slate-600 dark:from-slate-200 dark:to-slate-400" },
+    pass: { label: "PASS", cls: "from-slate-400 to-slate-600 dark:from-slate-200 dark:to-slate-400" },
+  };
+  function grade(g: string): { label: string; cls: string } {
+    return GRADES[g] ?? { label: g.toUpperCase(), cls: "from-slate-400 to-slate-600 dark:from-slate-200 dark:to-slate-400" };
   }
 
-  function rankClass(rank: number): string {
-    if (rank === 1) return "bg-amber-400/20 text-amber-600 ring-amber-400/40 dark:text-amber-300";
-    if (rank === 2) return "bg-slate-400/20 text-slate-600 ring-slate-400/40 dark:text-slate-200";
-    if (rank === 3) return "bg-orange-500/15 text-orange-600 ring-orange-500/40 dark:text-orange-300";
-    return "text-muted-foreground ring-border";
+  const fmt = (n: number) => grouped(n);
+  const isMine = (e: ScoreEntry) => myHandle !== undefined && e.account.sonolus_handle === myHandle;
+  const replayHref = (e: ScoreEntry) => (e.replay_data_hash ? `/replays/${replayName(e.chart_id, e.id)}` : null);
+
+  // the number this board is ranked by, plus a short label when it isn't the score
+  function headline(e: ScoreEntry): { value: string; label?: string } {
+    if (focus === "accuracy") return { value: formatAccuracy(e.accuracy_score) };
+    if (focus === "perfect") return { value: fmt(e.nperfect), label: t("leaderboard.perfectJudge") };
+    if (focus === "miss") return { value: fmt(e.nmiss), label: t("leaderboard.missJudge") };
+    if (focus === "breaks") return { value: fmt(e.ngood + e.nmiss), label: `${t("leaderboard.goodJudge")}+${t("leaderboard.missJudge")}` };
+    return { value: fmt(e.arcade_score) };
   }
 </script>
 
-<div class="space-y-1.5" aria-label={`${leaderboardMeta[type].label} leaderboard`}>
-  <div
-    class="text-muted-foreground hidden items-center gap-3 px-3 text-[11px] font-medium tracking-wide uppercase sm:flex"
+{#snippet gradeGlyph(g: string, size: string)}
+  <span
+    class={cn(
+      "font-heading inline-block bg-linear-to-b bg-clip-text pr-[0.18em] font-black text-transparent italic",
+      grade(g).cls,
+      size,
+    )}>{grade(g).label}</span
   >
-    <span class="w-8 text-center">#</span>
-    <span class="flex-1">Player</span>
-    <span class="w-40">Judgments</span>
-    <span class="w-12 text-center">Spd</span>
-    <span class="w-24 text-right">{primaryLabel}</span>
-  </div>
+{/snippet}
 
-  {#each entries as e, i (e.id)}
-    {@const rank = startRank + i}
-    {@const grade = gradeBadge(e.grade)}
-    <div
-      class="bg-card/60 ring-border/50 hover:bg-card flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 transition-colors"
+{#snippet judges(e: ScoreEntry, big: boolean)}
+  <dl class={cn("flex flex-wrap gap-x-4 gap-y-1 tabular-nums", big ? "text-sm" : "text-xs")}>
+    {#each [
+      { label: t("leaderboard.perfectJudge"), n: e.nperfect, tone: "text-fuchsia-500 dark:text-fuchsia-400" },
+      { label: t("leaderboard.greatJudge"), n: e.ngreat, tone: "text-pink-500 dark:text-pink-400" },
+      { label: t("leaderboard.goodJudge"), n: e.ngood, tone: "text-sky-600 dark:text-sky-400" },
+      { label: t("leaderboard.missJudge"), n: e.nmiss, tone: "text-muted-foreground" },
+    ] as j (j.label)}
+      <div class="flex items-baseline gap-1">
+        <dt class={cn("font-medium", j.tone)}>{j.label}</dt>
+        <dd class={cn("font-bold", j.n === 0 && "text-muted-foreground/50")}>{fmt(j.n)}</dd>
+      </div>
+    {/each}
+  </dl>
+{/snippet}
+
+{#snippet replayButton(e: ScoreEntry)}
+  {#if replayHref(e)}
+    <a
+      href={replayHref(e)}
+      aria-label={t("replay.watchReplay")}
+      title={t("replay.watchReplay")}
+      class="text-primary bg-primary/12 hover:bg-primary hover:text-primary-foreground grid size-9 shrink-0 place-items-center rounded-full transition-colors"
     >
-      <span
-        class={cn(
-          "grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold tabular-nums ring-1",
-          rankClass(rank),
-        )}
-      >
-        {rank}
-      </span>
+      <RiPlayFill class="size-4 translate-x-px" />
+    </a>
+  {:else}
+    <span class="size-9 shrink-0"></span>
+  {/if}
+{/snippet}
 
-      <div class="flex min-w-0 flex-1 flex-col">
-        <span class="flex items-center gap-1.5">
-          <span class="truncate text-sm font-semibold">{e.account.sonolus_username}</span>
-          <span class="text-muted-foreground/70 text-xs tabular-nums">#{e.account.sonolus_handle}</span>
-          {#if e.account.admin}
-            <span
-              class="rounded border border-rose-400/40 bg-rose-400/15 px-1 py-px text-[9px] font-bold text-rose-600 dark:text-rose-300"
-              >ADMIN</span
-            >
-          {:else if e.account.mod}
-            <span
-              class="rounded border border-violet-400/40 bg-violet-400/15 px-1 py-px text-[9px] font-bold text-violet-600 dark:text-violet-300"
-              >MOD</span
-            >
-          {/if}
-        </span>
-        <span
-          class={cn(
-            "mt-0.5 inline-flex w-fit items-center rounded border px-1 py-px text-[10px] font-bold sm:hidden",
-            grade.class,
-          )}>{grade.label}</span
-        >
-      </div>
+<div
+  class="bg-card relative isolate overflow-hidden rounded-3xl p-2 sm:p-3"
+  aria-label={t("leaderboard.ariaLabel", [leaderboardMeta[type].label])}
+>
+  {#if bg}
+    <span
+      class="absolute -inset-1/4 -z-10 bg-cover bg-center opacity-10 blur-3xl"
+      style="background-image: url({bg})"
+    ></span>
+  {/if}
 
-      <!-- judgments -->
-      <div
-        class="text-muted-foreground hidden w-40 items-center gap-2 text-[11px] tabular-nums sm:flex"
-      >
-        <span class="inline-flex items-center gap-1">
-          <span class={cn("rounded border px-1 py-px text-[10px] font-bold", grade.class)}
-            >{grade.label}</span
+  {#if top}
+    {@const head = headline(top)}
+    <section
+      class={cn("bg-background/60 flex flex-col gap-4 rounded-2xl p-4 sm:p-5", isMine(top) && "ring-primary/60 ring-2")}
+    >
+      <div class="flex items-center gap-3 sm:gap-4">
+        <img src={profileUrl(top.account)} alt="" class="size-11 shrink-0 rounded-full object-cover sm:size-12" />
+        <div class="min-w-0 flex-1">
+          <p class="flex items-center gap-1.5 text-[11px] font-bold text-amber-500">
+            <span class="font-heading">#1</span>
+            {t("leaderboard.topScore")}
+          </p>
+          <a href={`/creators/${top.account.sonolus_handle}`} class="block truncate font-bold hover:underline">
+            {top.account.sonolus_username}
+            {#if isMine(top)}<span class="bg-primary text-primary-foreground ml-1 rounded px-1.5 text-[10px] font-bold">{t("leaderboard.you")}</span>{/if}
+          </a>
+          <p class="text-muted-foreground truncate text-xs">#{top.account.sonolus_handle} · {relativeTime(top.created_at)}</p>
+        </div>
+        {#if replayHref(top)}
+          <a
+            href={replayHref(top)}
+            class="bg-primary text-primary-foreground hidden h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-[filter] hover:brightness-110 sm:inline-flex"
           >
-        </span>
-        <span title="perfect / great / good / miss" class="whitespace-nowrap">
-          {e.nperfect}<span class="text-muted-foreground/40">/</span>{e.ngreat}<span
-            class="text-muted-foreground/40">/</span
-          >{e.ngood}<span class="text-muted-foreground/40">/</span>{e.nmiss}
-        </span>
+            <RiPlayFill class="size-4" />
+            {t("replay.watchReplay")}
+          </a>
+          <span class="sm:hidden">{@render replayButton(top)}</span>
+        {/if}
       </div>
 
-      <span
-        class="text-muted-foreground hidden w-12 text-center text-xs tabular-nums sm:block"
-        >×{e.speed.toFixed(1)}</span
-      >
+      <div class="flex flex-wrap items-end gap-x-6 gap-y-2">
+        <span class="text-4xl leading-none sm:text-5xl">{@render gradeGlyph(top.grade, "")}</span>
+        <div>
+          <p class="text-muted-foreground text-[11px]">{head.label ?? (focus === "accuracy" ? t("leaderboard.accuracy") : t("leaderboard.score"))}</p>
+          <p class="font-heading text-3xl font-semibold tabular-nums sm:text-4xl">{head.value}</p>
+        </div>
+        <div class="text-muted-foreground pb-1 text-sm tabular-nums">
+          {focus === "accuracy" ? fmt(top.arcade_score) : formatAccuracy(top.accuracy_score)} · ×{top.speed.toFixed(1)}
+        </div>
+      </div>
 
-      <span class="w-20 text-right text-sm font-bold tabular-nums sm:w-24">{primary(e)}</span>
-    </div>
-  {/each}
+      {@render judges(top, true)}
+    </section>
+  {/if}
+
+  {#if rows.length}
+    <ol class={cn("space-y-1.5", top && "mt-2")}>
+      {#each rows as e, i (e.id)}
+        {@const rank = rowStart + i}
+        {@const head = headline(e)}
+        <li
+          class={cn(
+            "flex items-center gap-2.5 rounded-2xl px-2.5 py-2 transition-colors sm:gap-3 sm:px-3",
+            isMine(e) ? "bg-primary/15" : "bg-background/45 hover:bg-background/75",
+          )}
+        >
+          <span
+            class={cn(
+              "font-heading w-7 shrink-0 text-center text-sm font-semibold tabular-nums",
+              rank === 2 && "text-slate-400",
+              rank === 3 && "text-orange-500",
+              rank > 3 && "text-muted-foreground",
+            )}>{rank}</span
+          >
+          <span class="hidden w-16 shrink-0 text-center sm:block">{@render gradeGlyph(e.grade, "text-sm")}</span>
+          <img src={profileUrl(e.account)} alt="" class="size-8 shrink-0 rounded-full object-cover" />
+
+          <div class="min-w-0 flex-1">
+            <div class="flex min-w-0 items-center gap-1.5">
+              <a href={`/creators/${e.account.sonolus_handle}`} class="truncate text-sm font-bold hover:underline"
+                >{e.account.sonolus_username}</a
+              >
+              <span class="text-muted-foreground hidden shrink-0 text-xs tabular-nums xl:inline">#{e.account.sonolus_handle}</span>
+              {#if isMine(e)}
+                <span class="bg-primary text-primary-foreground shrink-0 rounded px-1.5 text-[10px] font-bold">{t("leaderboard.you")}</span>
+              {/if}
+            </div>
+            <div class="mt-0.5 hidden md:block">{@render judges(e, false)}</div>
+          </div>
+
+          <div class="shrink-0 text-right leading-tight tabular-nums">
+            <p class="font-heading text-sm font-semibold sm:text-base">
+              {head.value}
+              {#if head.label}<span class="text-muted-foreground font-sans text-[10px] font-medium">{head.label}</span>{/if}
+            </p>
+            <p class="text-muted-foreground text-[11px]">
+              <span class="sm:hidden">{grade(e.grade).label} ·</span>
+              {focus === "accuracy" ? fmt(e.arcade_score) : formatAccuracy(e.accuracy_score)} · ×{e.speed.toFixed(1)}
+              <span class="hidden lg:inline">· {relativeTime(e.created_at)}</span>
+            </p>
+          </div>
+
+          {@render replayButton(e)}
+        </li>
+      {/each}
+    </ol>
+  {/if}
 </div>

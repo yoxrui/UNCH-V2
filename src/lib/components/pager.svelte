@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import { RiArrowLeftSLine, RiArrowRightSLine } from "$lib/icons.js";
 
   let {
@@ -20,29 +21,29 @@
 </script>
 
 {#if total > 1}
-  <nav class="flex items-center justify-center gap-2 pt-2" aria-label="Pagination">
+  <nav class="flex items-center justify-center gap-2 pt-2" aria-label={t("common.pagination")}>
     <button
       type="button"
       class="btn btn-sm btn-circle"
       onclick={() => go(page - 1)}
       disabled={page === 1}
-      aria-label="Previous page"
+      aria-label={t("common.previousPage")}
     >
       <RiArrowLeftSLine class="size-4" />
     </button>
 
     <div class="text-muted-foreground inline-flex items-center gap-1.5 text-sm">
-      <span>Page</span>
+      <span>{t("common.page")}</span>
       <input
         type="number"
         min="1"
         max={total}
         value={page}
         onchange={onChange}
-        aria-label="Page number"
+        aria-label={t("common.pageNumber")}
         class="bg-card focus-visible:ring-ring/50 h-8 w-14 rounded-lg border text-center text-sm tabular-nums outline-none focus-visible:ring-2"
       />
-      <span>of {total}</span>
+      <span>{t("common.ofPages", [total])}</span>
     </div>
 
     <button
@@ -50,7 +51,7 @@
       class="btn btn-sm btn-circle"
       onclick={() => go(page + 1)}
       disabled={page === total}
-      aria-label="Next page"
+      aria-label={t("common.nextPage")}
     >
       <RiArrowRightSLine class="size-4" />
     </button>

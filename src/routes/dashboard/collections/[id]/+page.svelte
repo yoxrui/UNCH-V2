@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import ChartCollectionView from "$lib/components/chart-collection-view.svelte";
   import Button from "$lib/components/button.svelte";
   import { RiArrowLeftLine, RiEditLine, RiStackLine } from "$lib/icons.js";
@@ -9,7 +10,7 @@
 </script>
 
 <svelte:head>
-  <title>{collection.name} | UntitledCharts</title>
+  <title>{t("common.pageTitle", [collection.name])}</title>
 </svelte:head>
 
 <main class="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -20,10 +21,9 @@
     <RiArrowLeftLine
       class="size-4 transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none"
     />
-    Dashboard
+    {t("nav.dashboard")}
   </a>
 
-  <!-- Collection header -->
   <section class="bg-card ring-border/70 rounded-3xl border p-5 ring-1 sm:p-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div class="min-w-0 space-y-2">
@@ -37,12 +37,12 @@
         {/if}
         <p class="text-muted-foreground inline-flex items-center gap-1.5 text-sm tabular-nums">
           <RiStackLine class="size-4" />
-          <span class="text-foreground font-semibold">{charts.length}</span> charts
+          <span class="text-foreground font-semibold">{charts.length}</span> {t("creators.charts")}
         </p>
       </div>
       <Button variant="outline" size="sm" class="shrink-0 rounded-full">
         <RiEditLine class="size-4" />
-        Edit
+        {t("levelDetail.edit")}
       </Button>
     </div>
   </section>
@@ -50,8 +50,8 @@
   <div
     class="bg-muted/30 text-muted-foreground rounded-xl border border-dashed px-4 py-3 text-sm"
   >
-    Preview only, collections aren't saved to the backend yet.
+    {t("collections.previewOnlyCollectionsArenT")}
   </div>
 
-  <ChartCollectionView {charts} emptyMessage="This collection is empty." />
+  <ChartCollectionView {charts} emptyMessage={t("collections.emptyCollection")} />
 </main>

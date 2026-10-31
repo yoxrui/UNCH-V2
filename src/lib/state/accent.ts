@@ -1,17 +1,18 @@
+// Blue is the theme default from app.css, so it carries no override.
 export const accents = [
-  { name: "Violet", color: "oklch(0.5 0.24 262)" },
-  { name: "Miku", color: "oklch(0.74 0.12 191)" },
-  { name: "Emerald", color: "oklch(0.62 0.15 160)" },
-  { name: "Rose", color: "oklch(0.6 0.22 15)" },
-  { name: "Amber", color: "oklch(0.72 0.17 65)" },
-];
+  { name: "Blue", color: "oklch(0.62 0.16 244)", fg: "oklch(0.98 0.01 244)" },
+  { name: "Sky", color: "oklch(0.76 0.13 228)", fg: "oklch(0.2 0.04 228)" },
+  { name: "Miku", color: "oklch(0.76 0.12 188)", fg: "oklch(0.2 0.04 188)" },
+  { name: "Ocean", color: "oklch(0.52 0.12 225)", fg: "oklch(0.98 0.01 225)" },
+]
 
 const KEY = "accent";
-const DEFAULT = "Violet";
+const DEFAULT = "Blue";
 
-function applyColor(color: string) {
+function applyColor(color: string, fg: string) {
   const root = document.documentElement;
   root.style.setProperty("--primary", color);
+  root.style.setProperty("--primary-foreground", fg);
   root.style.setProperty("--ring", color);
 }
 
@@ -26,7 +27,8 @@ export function storedAccentName(): string {
 export function setAccent(name: string) {
   const a = accents.find((x) => x.name === name);
   if (!a) return;
-  applyColor(a.color);
+  if (a.name === DEFAULT) return resetAccent();
+  applyColor(a.color, a.fg);
   try {
     localStorage.setItem(KEY, name);
   } catch {
@@ -37,6 +39,7 @@ export function setAccent(name: string) {
 export function resetAccent() {
   const root = document.documentElement;
   root.style.removeProperty("--primary");
+  root.style.removeProperty("--primary-foreground");
   root.style.removeProperty("--ring");
   try {
     localStorage.removeItem(KEY);
@@ -47,5 +50,5 @@ export function resetAccent() {
 
 export function restoreAccent() {
   const a = accents.find((x) => x.name === storedAccentName());
-  if (a && a.name !== DEFAULT) applyColor(a.color);
+  if (a && a.name !== DEFAULT) applyColor(a.color, a.fg);
 }

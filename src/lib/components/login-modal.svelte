@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte.js";
   import Button from "./button.svelte";
   import { session } from "$lib/state/session.svelte";
 
@@ -7,8 +8,9 @@
   $effect(() => {
     const d = dialog;
     if (!d) return;
-    if (session.pending && !d.open) d.showModal();
-    else if (!session.pending && d.open) d.close();
+    const show = session.pending && !session.inlineLogin;
+    if (show && !d.open) d.showModal();
+    else if (!show && d.open) d.close();
   });
 
   function onClose() {
@@ -22,15 +24,15 @@
     <div class="mb-3 flex justify-center">
       <span class="loading loading-spinner text-primary size-8"></span>
     </div>
-    <h2 class="font-heading text-lg font-semibold tracking-tight">Waiting for confirmation…</h2>
+    <h2 class="font-heading text-lg font-semibold tracking-tight">{t("login.waitingForConfirmation")}</h2>
     <p class="text-muted-foreground mt-1 text-sm">
-      Approve the login in the Sonolus tab that just opened.
+      {t("login.approveTheLoginInThe")}
     </p>
     <Button variant="outline" onclick={() => session.cancelLogin()} class="mt-5 w-full rounded-full">
-      Cancel
+      {t("oauth.cancel")}
     </Button>
   </div>
   <form method="dialog" class="modal-backdrop">
-    <button aria-label="Cancel login">cancel</button>
+    <button aria-label={t("login.cancelLogin")}>{t("login.cancel")}</button>
   </form>
 </dialog>

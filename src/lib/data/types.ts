@@ -1,8 +1,4 @@
-/**
- * Types mirroring the real UntitledCharts API (see README.md).
- * This is a no-backend demo: data is mock, but shaped exactly to the API so the
- * UI only ever shows fields the real endpoints return.
- */
+
 
 export type Account = {
   sonolus_id: string;
@@ -19,10 +15,10 @@ export type Account = {
 export type Chart = {
   id: string;
   rating: number;
-  author: string; // sonolus_id of the uploader
+  author: string;
   author_handle: number;
-  author_full: string; // "Name#handle"
-  chart_design: string; // display name(s) of the charter(s)
+  author_full: string;
+  chart_design: string;
   title: string;
   artists: string;
   tags: string[];
@@ -31,19 +27,22 @@ export type Chart = {
   status: "PUBLIC" | "UNLISTED" | "PRIVATE";
   like_count: number;
   comment_count: number;
-  created_at: string; // ISO
-  published_at: string; // ISO
-  updated_at: string; // ISO
+  created_at: string;
+  published_at: string;
+  updated_at: string;
   jacket_file_hash: string;
   music_file_hash: string;
   background_file_hash: string;
+  chart_file_hash: string;
+  preview_file_hash: string;
+  custom_background: boolean;
 };
 
 export type Comment = {
   id: number;
   username: string;
   content: string;
-  created_at: number; // epoch ms
+  created_at: number;
   deleted_at: number | null;
   account: Account;
 };
@@ -62,7 +61,7 @@ export type LeaderboardType = (typeof LEADERBOARD_TYPES)[number];
 export type ScoreEntry = {
   id: number;
   engine: string;
-  grade: string; // e.g. "allPerfect", "fullCombo", "clear"
+  grade: string;
   nperfect: number;
   ngreat: number;
   ngood: number;
@@ -72,19 +71,13 @@ export type ScoreEntry = {
   speed: number;
   display_name: string;
   account: Account;
-  created_at: string; // ISO
+  created_at: string;
+  chart_id: string;
+  replay_data_hash: string | null;
 };
 
 export type Trends = { likes: number[]; comments: number[] };
 
-export type CharterSummary = {
-  account: Account;
-  chartCount: number;
-  totalLikes: number;
-  staffPicks: number;
-};
-
-/** Accepted `sort_by` values on `GET /api/charts/` (verified against the API). */
 export const SORT_OPTIONS = [
   "decaying_likes",
   "created_at",
@@ -100,14 +93,14 @@ export type SortBy = (typeof SORT_OPTIONS)[number];
 export type ChartQuery = {
   sort_by?: SortBy;
   sort_order?: "asc" | "desc";
-  /** Free-text query — matches title, artists, or charter name. */
+
   q?: string;
   staff_pick?: boolean;
   tags?: string[];
-  /** Canonical difficulty names (derived from tags+rating); demo-side convenience. */
+
   difficulties?: string[];
   min_rating?: number;
   max_rating?: number;
-  page?: number; // 0-based
+  page?: number;
   limit?: number;
 };
