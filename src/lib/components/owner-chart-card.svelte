@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Chart } from "$lib/data/index.js";
-  import { compact, coverUrl } from "$lib/data/index.js";
+  import { compact, coverUrl, backgroundUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import LevelBadge from "./level-badge.svelte";
   import FormattedText from "./formatted-text.svelte";
@@ -57,6 +57,82 @@
       <p class="text-muted-foreground truncate text-[11px]">{statusLabel}</p>
     </div>
     <a href={editHref} class="absolute inset-0" aria-label={t("dashboard.actionsFor", [chart.title])}></a>
+  </article>
+{:else if prefs.dashboardCards === "background"}
+  <article class="group bg-card relative flex h-full flex-col overflow-hidden rounded-3xl">
+    <div class="relative">
+      <div class="aspect-16/7 w-full overflow-hidden">
+        <CoverArt
+          id={`${chart.id}-bg`}
+          src={backgroundUrl(chart)}
+          rounded="rounded-none"
+          class="size-full transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
+        />
+        <div class="from-card absolute inset-0 bg-linear-to-t to-transparent"></div>
+      </div>
+      <CoverArt
+        id={chart.id}
+        title={chart.title}
+        src={cover}
+        rounded="rounded-2xl"
+        class="ring-card absolute bottom-0 left-4 z-20 size-16 translate-y-1/2 ring-4"
+      />
+      <LevelBadge level={chart.rating} size="sm" onImage class="absolute top-3 right-3" />
+      <span class="absolute top-3 left-3">{@render status()}</span>
+
+      <div
+        class="pointer-events-none absolute right-2 bottom-2 left-24 z-10 hidden grid-cols-2 gap-1 opacity-0 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100 sm:grid"
+      >
+        <a
+          href={editHref}
+          class={cn(
+            "bg-primary text-primary-foreground pointer-events-auto inline-flex h-7 items-center justify-center gap-1 rounded-full px-2 text-[11px] font-semibold",
+            !shareable && "col-span-2",
+          )}
+        >
+          <RiEditLine class="size-3" />
+          {t("dashboard.edit")}
+        </a>
+        {#if shareable}
+          <a
+            href={viewHref}
+            class="bg-secondary text-secondary-foreground pointer-events-auto inline-flex h-7 items-center justify-center gap-1 rounded-full px-2 text-[11px] font-semibold"
+          >
+            <RiExternalLinkLine class="size-3" />
+            {t("dashboard.view")}
+          </a>
+          <button
+            type="button"
+            onclick={copyLink}
+            class="bg-secondary text-secondary-foreground pointer-events-auto col-span-2 inline-flex h-7 items-center justify-center gap-1 rounded-full px-2 text-[11px] font-semibold"
+          >
+            {#if copied}<RiCheckLine class="size-3" />{:else}<RiLinksLine class="size-3" />{/if}
+            {copied ? t("levelDetail.linkCopied") : t("dashboard.copyLink")}
+          </button>
+        {/if}
+      </div>
+    </div>
+
+    <div class="flex flex-1 flex-col gap-2 px-4 pt-10 pb-4">
+      <div class="min-w-0">
+        <h3 class="truncate text-sm font-bold"><FormattedText text={chart.title} /></h3>
+        <p class="text-muted-foreground truncate text-xs"><FormattedText text={chart.artists} /></p>
+      </div>
+      <div class="text-muted-foreground mt-auto flex items-center justify-between gap-2 text-xs">
+        <span class="text-accent min-w-0 truncate font-bold">{chart.chart_design}</span>
+        <span class="flex shrink-0 items-center gap-3 tabular-nums [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1">
+          <span><RiHeart3Fill class="size-3.5 text-rose-400" />{compact(chart.like_count)}</span>
+          <span><RiChat3Line class="size-3.5" />{compact(chart.comment_count)}</span>
+        </span>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      onclick={() => (drawerOpen = true)}
+      aria-label={t("dashboard.actionsFor", [chart.title])}
+      class="absolute inset-0 z-20 sm:hidden"
+    ></button>
   </article>
 {:else}
   <article class="group bg-card relative flex items-center gap-3 rounded-2xl p-2.5">

@@ -20,6 +20,7 @@
   import { untrack } from "svelte";
   import { recallPage, rememberPage, recallValue, rememberValue } from "$lib/state/page-memory.js";
   import { cn } from "$lib/utils.js";
+  import { ambientFrom, ambientStyle, tintPage, type Ambient } from "$lib/ambient.js";
   import {
     fetchLeaderboard,
     fetchComments,
@@ -54,6 +55,20 @@
 
   let { data } = $props();
   const chart = $derived(data.chart);
+
+  // tint the page with the cover's main colour
+  let ambient = $state<Ambient | null>(null);
+  $effect(() => {
+    let alive = true;
+    ambient = null;
+    ambientFrom(coverUrl(chart)).then((a) => {
+      if (alive) ambient = a;
+    });
+    return () => {
+      alive = false;
+    };
+  });
+  $effect(() => tintPage(ambient));
   const isOwner = $derived(session.isLoggedIn && session.user?.handle === chart.author_handle);
 
   const sonolusLink = $derived(sonolusOpenUrl(`levels/UnCh-${chart.id}`));
@@ -169,6 +184,7 @@
 
 <SiteHeader />
 
+<div class={cn(ambient && "ambient")} style={ambientStyle(ambient)}>
 <main class="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
   <a
     href="/browse"
@@ -303,7 +319,9 @@
           </div>
           <div class="bg-card px-4 py-2.5">
             <dt class="text-muted-foreground text-xs">{t("levelDetail.published")}</dt>
-            <dd class="font-heading text-lg font-bold whitespace-nowrap">{relativeTime(chart.published_at)}</dd>
+            <dd class="font-heading text-base leading-snug font-bold sm:text-lg" title={new Date(chart.published_at).toLocaleString()}>
+              {relativeTime(chart.published_at)}
+            </dd>
           </div>
         </dl>
       </div>
@@ -457,9 +475,9 @@
   {#await data.related}
     <section class="space-y-5">
       <h2 class="font-heading text-lg font-semibold tracking-tight">{t("levelDetail.related")}</h2>
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
         {#each Array(4) as _, i (i)}
-          <div class={i >= 2 ? "hidden lg:block" : i >= 1 ? "hidden sm:block" : ""}>
+          <div class={i >= 3 ? "hidden lg:block" : i >= 2 ? "hidden sm:block" : ""}>
             <ChartSkeleton />
           </div>
         {/each}
@@ -471,5 +489,6 @@
     {/if}
   {/await}
 </main>
+</div>
 
 <SiteFooter />

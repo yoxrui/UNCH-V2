@@ -43,9 +43,9 @@
 
   {#if carousel}
     <Carousel.Root opts={{ align: "start", dragFree: true, containScroll: "trimSnaps" }}>
-      <Carousel.Content class="gap-5">
+      <Carousel.Content class="gap-3 sm:gap-5">
         {#each charts as chart (chart.id)}
-          <Carousel.Item class="basis-[78%] sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-3.75rem)/4)]">
+          <Carousel.Item class="basis-[46%] sm:basis-[calc((100%-2.5rem)/3)] lg:basis-[calc((100%-3.75rem)/4)]">
             <ChartCard {chart} />
           </Carousel.Item>
         {/each}
@@ -54,10 +54,8 @@
   {:else}
     <div
       class={cn(
-        "grid gap-4 sm:gap-5",
-        columns === "row"
-          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+        "grid gap-3 sm:gap-5",
+        columns === "row" ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3",
       )}
     >
       {#each charts as chart (chart.id)}

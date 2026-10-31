@@ -99,7 +99,7 @@
         {/each}
       </div>
     {:else}
-      <div class="hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">
+      <div class="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-4">
         {#each sorted as chart (chart.id)}
           <ChartCard {chart} />
         {/each}

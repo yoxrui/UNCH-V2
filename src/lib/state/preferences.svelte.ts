@@ -1,10 +1,10 @@
 const KEY = "unch:prefs";
 
-export type DashboardCardStyle = "background" | "cover";
+export type DashboardCardStyle = "simple" | "background" | "cover";
 
 type Preferences = { dashboardCards: DashboardCardStyle };
 
-export const prefs = $state<Preferences>({ dashboardCards: "background" });
+export const prefs = $state<Preferences>({ dashboardCards: "simple" });
 
 let loaded = false;
 
@@ -13,7 +13,7 @@ export function loadPrefs() {
   loaded = true;
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? "{}");
-    if (saved.dashboardCards === "cover" || saved.dashboardCards === "background") {
+    if (["simple", "background", "cover"].includes(saved.dashboardCards)) {
       prefs.dashboardCards = saved.dashboardCards;
     }
   } catch {

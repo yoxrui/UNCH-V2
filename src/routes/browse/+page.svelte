@@ -212,7 +212,7 @@
         {/each}
       </div>
     {:else}
-      <div class="hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">
+      <div class="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-4">
         {#each Array(9) as _, i (i)}
           <ChartSkeleton />
         {/each}
@@ -244,7 +244,7 @@
         {/each}
       </div>
     {:else}
-      <div class="hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">
+      <div class="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-4">
         {#each gridCharts as chart (chart.id)}
           <div animate:flip={{ duration: 250 }} in:fade={{ duration: 180 }}>
             <ChartCard {chart} />

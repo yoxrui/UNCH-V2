@@ -191,6 +191,46 @@ body {
 
 a { color: inherit; }
 
+/* Tints a subtree with a colour picked from an image (see src/lib/ambient.ts, which sets --amb*).
+   The base values repeat the theme's own, since a variable can't be mixed with itself. */
+.ambient {
+  --background: color-mix(in oklab, var(--amb) 7%, oklch(0.975 0.008 235));
+  --card: color-mix(in oklab, var(--amb) 6%, oklch(1 0 0));
+  --popover: var(--card);
+  --muted: color-mix(in oklab, var(--amb) 12%, oklch(0.945 0.013 235));
+  --secondary: var(--muted);
+  --bc: color-mix(in oklab, var(--amb) 25%, oklch(0.9 0.014 235));
+  --primary: var(--amb-primary);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: var(--amb-primary);
+  --accent: var(--amb-text-light);
+  /* daisyUI reads these, and they were resolved at :root */
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-base-100: var(--card);
+  --color-base-200: var(--muted);
+  --color-base-300: var(--secondary);
+}
+/* page background on tinted pages: the image colour blended into the normal background, plus a glow */
+body.ambient-page {
+  background:
+    radial-gradient(ellipse 80% 28rem at top, color-mix(in oklab, var(--amb) 18%, transparent), transparent) no-repeat,
+    color-mix(in oklab, var(--amb) 9%, oklch(0.975 0.008 235));
+}
+.dark body.ambient-page {
+  background:
+    radial-gradient(ellipse 80% 28rem at top, color-mix(in oklab, var(--amb) 22%, transparent), transparent) no-repeat,
+    color-mix(in oklab, var(--amb) 14%, oklch(0.165 0.03 245));
+}
+
+.dark .ambient {
+  --background: color-mix(in oklab, var(--amb) 12%, oklch(0.15 0.02 245));
+  --card: color-mix(in oklab, var(--amb) 14%, oklch(0.2 0.025 245));
+  --muted: color-mix(in oklab, var(--amb) 18%, oklch(0.25 0.025 245));
+  --bc: color-mix(in oklab, var(--amb) 30%, oklch(1 0 0 / 9%));
+  --accent: var(--amb-text-dark);
+}
+
 /* Unbounded runs heavy; one step lighter than the requested weight reads right. */
 .font-heading {
   letter-spacing: -0.01em;

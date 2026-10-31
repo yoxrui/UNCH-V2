@@ -15,6 +15,7 @@
   import Pager from "$lib/components/pager.svelte";
   import { recallPage, rememberPage, recallValue, rememberValue } from "$lib/state/page-memory.js";
   import { cn } from "$lib/utils.js";
+  import { ambientFrom, ambientStyle, tintPage, type Ambient } from "$lib/ambient.js";
   import {
     compact,
     profileUrl,
@@ -25,6 +26,20 @@
 
   let { data } = $props();
   const account = $derived(data.account);
+
+  // tint the page with the banner's main colour
+  let ambient = $state<Ambient | null>(null);
+  $effect(() => {
+    let alive = true;
+    ambient = null;
+    ambientFrom(account.banner_hash ? bannerUrl(account) : null).then((a) => {
+      if (alive) ambient = a;
+    });
+    return () => {
+      alive = false;
+    };
+  });
+  $effect(() => tintPage(ambient));
   const role = $derived(account.admin ? t("userProfile.admin") : account.mod ? t("userProfile.moderator") : null);
 
   type SortKey = "new" | "liked" | "level";
@@ -97,6 +112,7 @@
 
 <SiteHeader />
 
+<div class={cn(ambient && "ambient")} style={ambientStyle(ambient)}>
 <main class="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
   <a
     href="/browse"
@@ -238,14 +254,14 @@
       </div>
 
       {#await data.charts}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
           {#each Array(4) as _, i (i)}
             <ChartSkeleton />
           {/each}
         </div>
       {:then charts}
         {#if charts.length}
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
             {#each pageSlice(charts) as chart (chart.id)}
               <ChartCard {chart} />
             {/each}
@@ -261,5 +277,6 @@
     </section>
   </div>
 </main>
+</div>
 
 <SiteFooter />

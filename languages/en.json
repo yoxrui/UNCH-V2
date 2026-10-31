@@ -667,6 +667,7 @@
     "background": "Background",
     "dashboardCards": "Dashboard cards",
     "dashboardCardsHint": "Choose the artwork your chart cards show in the dashboard.",
+    "cardSimple": "Simple",
     "cardBackground": "Background",
     "cardCoverOnly": "Cover only"
   },

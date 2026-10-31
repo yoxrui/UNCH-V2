@@ -15,9 +15,9 @@
 {#snippet skeletonRow(title: string)}
   <section class="space-y-5">
     <h2 class="font-heading text-lg font-semibold tracking-tight">{title}</h2>
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
       {#each Array(4) as _, i (i)}
-        <div class={i >= 2 ? "hidden lg:block" : i >= 1 ? "hidden sm:block" : ""}>
+        <div class={i >= 3 ? "hidden lg:block" : i >= 2 ? "hidden sm:block" : ""}>
           <ChartSkeleton />
         </div>
       {/each}

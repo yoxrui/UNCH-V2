@@ -5,6 +5,7 @@
   import { onMount } from "svelte";
 
   const cardStyles: { value: DashboardCardStyle; label: string }[] = [
+    { value: "simple", get label() { return t("settings.cardSimple"); } },
     { value: "background", get label() { return t("settings.cardBackground"); } },
     { value: "cover", get label() { return t("settings.cardCoverOnly"); } },
   ];

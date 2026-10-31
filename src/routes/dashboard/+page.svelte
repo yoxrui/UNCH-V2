@@ -201,7 +201,11 @@
       <div
         class={cn(
           "grid gap-5",
-          prefs.dashboardCards === "cover" ? "grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6" : "grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3",
+          prefs.dashboardCards === "cover"
+            ? "grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6"
+            : prefs.dashboardCards === "background"
+              ? "grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              : "grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3",
         )}
       >
         {#each visibleCharts as chart (chart.id)}

@@ -13,7 +13,7 @@
   const cover = $derived(coverUrl(chart));
 </script>
 
-<article class="group bg-card relative isolate flex h-full flex-col gap-2.5 overflow-hidden rounded-3xl p-2">
+<article class="group bg-card @container relative isolate flex h-full flex-col gap-2.5 overflow-hidden rounded-3xl p-2">
   <!-- Backdrop and tint reuse the cover, which the card downloads anyway. Chart background art is
        ~2–3 MB per chart at full size, far too heavy for a card. Lazy <img> so off-screen cards load nothing. -->
   {#if cover}
@@ -46,10 +46,12 @@
 
   {#if chart.staff_pick}
     <span
+      title={t("common.staff")}
       class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-950"
     >
       <RiStarFill class="size-2.5" />
-      {t("common.staff")}
+      <!-- on narrow cards (two per row on phones) the label would run into the level badge -->
+      <span class="hidden @[13rem]:inline">{t("common.staff")}</span>
     </span>
   {/if}
 
