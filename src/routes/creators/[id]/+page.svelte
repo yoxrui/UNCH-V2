@@ -253,7 +253,7 @@
           <Pager count={charts.length} perPage={PER_PAGE} bind:page={chartPage} />
         {:else}
           <div class="bg-muted/30 flex flex-col items-center gap-1.5 rounded-2xl px-4 py-10 text-center">
-            <div class="mb-2"><div class="overflow-hidden rounded-xl bg-slate-950 ring-1 ring-white/10"><img src="/art/empty-stage.svg" alt="" aria-hidden="true" class="block w-44" /></div></div>
+            <img src="/miku-sitting.png" alt="" aria-hidden="true" class="mb-2 block w-24" />
             <p class="text-sm font-medium">{t("userProfile.noPublicCharts")}</p>
           </div>
         {/if}

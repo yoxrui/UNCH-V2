@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from "$lib/i18n.svelte.js";
   import type { Chart } from "$lib/data/index.js";
-  import { compact, coverUrl, backgroundUrl } from "$lib/data/index.js";
+  import { compact, coverUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import LevelBadge from "./level-badge.svelte";
   import FormattedText from "./formatted-text.svelte";
@@ -25,9 +25,12 @@
   let selected = $state(0);
   let paused = $state(false);
 
-  const heroBg = $derived(charts[selected] ? backgroundUrl(charts[selected]) : null);
+  // the cover rather than the chart's background art: it's already downloading for the slide, while
+  // background art is ~2–3 MB and would be the slowest thing on the page
+  const heroBg = $derived(charts[selected] ? coverUrl(charts[selected]) : null);
 
-  const DOT_STEP = 14;
+  // each dot button is a 24px tap target with the 6px dot centred in it
+  const DOT_STEP = 24;
   const dot = new Spring(0, { stiffness: 0.16, damping: 0.82 });
   $effect(() => {
     dot.target = selected;
@@ -61,16 +64,16 @@
   aria-roledescription="carousel"
   aria-label={t("hero.featuredStaffPicks")}
 >
-  <div class="bg-featured text-featured-foreground relative w-full max-w-5xl overflow-hidden rounded-3xl">
+  <div class="bg-featured text-featured-foreground relative isolate w-full max-w-5xl overflow-hidden rounded-3xl">
     <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
       {#if heroBg}
-        <img src={heroBg} alt="" class="size-full scale-105 object-cover opacity-70 blur-[2px]" />
+        <img src={heroBg} alt="" class="size-full scale-110 object-cover opacity-70 blur-lg" />
       {/if}
-      <div class="from-featured/95 via-featured/70 to-featured/30 absolute inset-0 bg-linear-to-r"></div>
+      <div class="from-featured/90 via-featured/55 to-featured/10 absolute inset-0 bg-linear-to-r"></div>
     </div>
     <Carousel.Root setApi={(a) => (api = a)} opts={{ loop: true }} class="w-full">
       <Carousel.Content class="ms-0">
-        {#each charts as current (current.id)}
+        {#each charts as current, i (current.id)}
           <Carousel.Item class="ps-0">
             <div class="flex flex-col gap-6 p-4 sm:flex-row sm:items-stretch sm:gap-8 sm:p-6">
               <a
@@ -82,6 +85,7 @@
                   id={current.id}
                   title={current.title}
                   src={coverUrl(current)}
+                  priority={i === 0}
                   rounded="rounded-2xl"
                   class="size-full transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
                 />
@@ -134,7 +138,7 @@
                 {/if}
 
                 <div class="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
-                  <Button href={`/levels/UnCh-${current.id}`} class="rounded-full">
+                  <Button href={`/levels/UnCh-${current.id}`} aria-label={t("hero.openChart", [current.title])} class="rounded-full">
                     {t("hero.viewDetails2")}
                     <RiArrowRightLine class="size-4" />
                   </Button>
@@ -175,19 +179,21 @@
   </div>
 
   {#if charts.length > 1}
-    <div class="relative flex items-center gap-2">
+    <div class="relative flex items-center">
       {#each charts as chart, i (chart.id)}
         <button
           type="button"
           onclick={() => api?.scrollTo(i)}
           aria-label={t("hero.goToChart", [i + 1])}
           aria-current={i === selected}
-          class="bg-muted-foreground/30 hover:bg-muted-foreground/60 size-1.5 rounded-full transition-colors"
-        ></button>
+          class="group grid size-6 place-items-center"
+        >
+          <span class="bg-muted-foreground/30 group-hover:bg-muted-foreground/60 size-1.5 rounded-full transition-colors"></span>
+        </button>
       {/each}
       <span
         class="bg-primary pointer-events-none absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full"
-        style="left: {dot.current * DOT_STEP}px"
+        style="left: {dot.current * DOT_STEP + 9}px"
       ></span>
     </div>
   {/if}

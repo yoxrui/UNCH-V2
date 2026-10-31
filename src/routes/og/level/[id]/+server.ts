@@ -1,6 +1,7 @@
 import { fetchChart, coverUrl, backgroundUrl, API_URL } from "$lib/data/index.js";
 import { renderOgPng, toDataUrl, ogText, ogProfileUrl, ogEmojis, ogPlain } from "$lib/server/og/render.js";
 import { buildLevelOg } from "$lib/server/og/templates.js";
+import { miku } from "$lib/server/og/assets.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ params, url }) => {
@@ -19,11 +20,10 @@ export const GET: RequestHandler = async ({ params, url }) => {
     void 0;
   }
 
-  const [jacket, background, pfp, miku] = await Promise.all([
+  const [jacket, background, pfp] = await Promise.all([
     toDataUrl(coverUrl(chart)),
     toDataUrl(backgroundUrl(chart)),
     toDataUrl(pfpUrl),
-    toDataUrl(`${url.origin}/mikudayo.png`),
   ]);
 
   const title = ogText(chart.title, 30);

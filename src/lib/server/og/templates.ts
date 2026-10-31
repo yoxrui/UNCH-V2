@@ -209,18 +209,58 @@ export function buildUserOg(d: UserOg): OgNode {
   return box(rootStyle, children);
 }
 
-export type GenericOg = { title: string; subtitle: string; logo: string | null; miku: string | null };
+export type GenericOg = {
+  title: string;
+  subtitle: string;
+  // home has no title of its own, so the wordmark becomes the headline
+  isHome: boolean;
+  logo: string;
+  miku: string;
+  jackets: string[];
+};
 
 export function buildGenericOg(d: GenericOg): OgNode {
-  const children: OgChildren = [
-    corner("tl"), corner("tr"), corner("bl"), corner("br"),
-    d.logo ? img(d.logo, { width: "120px", height: "120px", objectFit: "contain", marginBottom: "28px" }) : null,
-    box({ fontSize: "72px", fontWeight: 700, lineHeight: 1.05, textAlign: "center" }, d.title),
-    box({ fontSize: "30px", color: "#94a3b8", marginTop: "18px", textAlign: "center", maxWidth: "900px" }, d.subtitle),
-    box({ position: "absolute", bottom: "44px", flexDirection: "row", alignItems: "center" }, [
-      box({ fontSize: "24px", fontStyle: "italic", color: "#38bdf8", marginRight: "16px" }, "Untitled Charts"),
-      d.miku ? img(d.miku, { width: "48px", height: "48px", objectFit: "contain", opacity: 0.9 }) : null,
-    ]),
+  const fan = [
+    { left: "0px", top: "70px", rotate: "-12deg" },
+    { left: "170px", top: "70px", rotate: "12deg" },
+    { left: "85px", top: "0px", rotate: "0deg" },
   ];
-  return box({ ...rootStyle, alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#020617,#0f172a 55%,#1e1b4b)" }, children);
+  const order = [d.jackets[2], d.jackets[1], d.jackets[0]];
+  const wordmark = (size: string) =>
+    box({ flexDirection: "row", alignItems: "center" }, [
+      img(d.logo, { width: size, height: size, objectFit: "contain", marginRight: "18px" }),
+      box({ fontFamily: "Unbounded", fontSize: size, fontWeight: 700, letterSpacing: "-1px" }, "UntitledCharts"),
+    ]);
+
+  const children: OgChildren = [
+    box({
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "1200px",
+      height: "630px",
+      background:
+        "radial-gradient(circle at 12% 18%, rgba(59,130,246,0.35), transparent 45%), radial-gradient(circle at 88% 85%, rgba(57,197,187,0.28), transparent 45%)",
+    }),
+
+    box({ position: "absolute", top: 0, left: "80px", width: d.jackets.length ? "620px" : "1040px", height: "630px", flexDirection: "column", justifyContent: "center" }, [
+      d.isHome ? wordmark("58px") : wordmark("30px"),
+      d.isHome ? null : box({ fontFamily: "Unbounded", fontSize: "60px", fontWeight: 700, lineHeight: 1.1, marginTop: "26px" }, d.title),
+      box({ width: "84px", height: "6px", borderRadius: "3px", background: "linear-gradient(90deg,#3b82f6,#39c5bb)", marginTop: "30px" }),
+      box({ fontSize: "30px", color: "#a5b8cf", lineHeight: 1.35, marginTop: "26px", maxWidth: "560px", textWrap: "balance" }, d.subtitle),
+    ]),
+
+    d.jackets.length
+      ? box({ position: "absolute", top: "150px", right: "90px", width: "400px", height: "320px" },
+          fan.map((f, i) =>
+            order[i]
+              ? box({ position: "absolute", left: f.left, top: f.top, width: "230px", height: "230px", borderRadius: "30px", overflow: "hidden", transform: `rotate(${f.rotate})`, border: "3px solid rgba(255,255,255,0.16)", boxShadow: "0 24px 50px rgba(0,0,0,0.55)" },
+                  img(order[i] as string, { width: "230px", height: "230px", objectFit: "cover" }))
+              : null,
+          ))
+      : null,
+
+    img(d.miku, { position: "absolute", bottom: "34px", right: "40px", width: "56px", height: "56px", objectFit: "contain" }),
+  ];
+  return box({ ...rootStyle, background: "linear-gradient(135deg,#06101d 0%,#0a1728 55%,#0a2430 100%)" }, children);
 }

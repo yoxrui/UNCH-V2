@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from "$lib/i18n.svelte.js";
   import type { Chart } from "$lib/data/index.js";
-  import { compact, relativeTime, coverUrl, backgroundUrl, previewProxyUrl } from "$lib/data/index.js";
+  import { compact, relativeTime, coverUrl, previewProxyUrl } from "$lib/data/index.js";
   import CoverArt from "./cover-art.svelte";
   import LevelBadge from "./level-badge.svelte";
   import Waveform from "./waveform.svelte";
@@ -11,22 +11,26 @@
   let { chart }: { chart: Chart } = $props();
 
   const cover = $derived(coverUrl(chart));
-  const backdrop = $derived(backgroundUrl(chart));
 </script>
 
 <article class="group bg-card relative isolate flex h-full flex-col gap-2.5 overflow-hidden rounded-3xl p-2">
-  <!-- the cover, blurred, tints the card; the chart's background art sits behind the cover -->
+  <!-- Backdrop and tint reuse the cover, which the card downloads anyway. Chart background art is
+       ~2–3 MB per chart at full size, far too heavy for a card. Lazy <img> so off-screen cards load nothing. -->
   {#if cover}
-    <span
-      class="absolute -inset-1/3 -z-20 bg-cover bg-center opacity-20 blur-2xl saturate-150 transition-opacity duration-250 group-hover:opacity-35 motion-reduce:transition-none"
-      style="background-image: url({cover})"
-    ></span>
-  {/if}
-  {#if backdrop}
-    <span
-      class="absolute inset-x-0 top-0 -z-10 h-2/5 bg-cover bg-center opacity-70 [mask-image:linear-gradient(to_bottom,black_35%,transparent)]"
-      style="background-image: url({backdrop})"
-    ></span>
+    <img
+      src={cover}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      class="absolute -inset-1/3 -z-20 size-[166%] max-w-none object-cover opacity-20 blur-2xl saturate-150 transition-opacity duration-250 group-hover:opacity-35 motion-reduce:transition-none"
+    />
+    <img
+      src={cover}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      class="absolute inset-x-0 top-0 -z-10 h-2/5 w-full object-cover opacity-60 blur-[2px] [mask-image:linear-gradient(to_bottom,black_35%,transparent)]"
+    />
   {/if}
 
   <div class="relative mx-auto mt-3 aspect-square w-[58%] shadow-[0_10px_22px_-10px_rgb(0_0_0/0.6)]">
@@ -62,7 +66,7 @@
       >{chart.chart_design}</a
     >
 
-    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy class="relative z-10 mt-2" />
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy={chart.preview_file_hash ? true : "play"} class="relative z-10 mt-2" />
 
     <div class="min-h-2 flex-1"></div>
     <div

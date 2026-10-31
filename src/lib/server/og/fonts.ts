@@ -26,10 +26,15 @@ async function fetchFont(family: string, weight: number, text?: string): Promise
 }
 
 export async function loadFonts(text: string): Promise<OgFont[]> {
-  const [regular, bold] = await Promise.all([fetchFont("Inter", 400), fetchFont("Inter", 700)]);
+  const [regular, bold, display] = await Promise.all([
+    fetchFont("Inter", 400),
+    fetchFont("Inter", 700),
+    fetchFont("Unbounded", 700),
+  ]);
   const fonts: OgFont[] = [
     { name: "Inter", data: regular, weight: 400, style: "normal" },
     { name: "Inter", data: bold, weight: 700, style: "normal" },
+    { name: "Unbounded", data: display, weight: 700, style: "normal" },
   ];
 
   const cjk = Array.from(new Set(Array.from(text).filter((c) => CJK_RE.test(c)))).join("");

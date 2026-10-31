@@ -20,7 +20,7 @@
 
 <dialog bind:this={dialog} class="modal" onclose={onClose}>
   <div class="modal-box bg-popover text-popover-foreground max-w-sm rounded-2xl border text-center">
-    <img src="https://sonolus.com/logo.png" alt="Sonolus" class="mx-auto mb-4 h-8 w-auto" />
+    <img src="https://sonolus.com/logo.png" alt="Sonolus" width="1775" height="360" class="mx-auto mb-4 h-8 w-auto" />
     <div class="mb-3 flex justify-center">
       <span class="loading loading-spinner text-primary size-8"></span>
     </div>

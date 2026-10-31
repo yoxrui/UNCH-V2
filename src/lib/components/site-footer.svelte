@@ -81,7 +81,7 @@
   </div>
 
   <div
-    class="border-border/60 text-muted-foreground/70 mx-auto flex max-w-7xl items-center justify-between gap-4 border-t px-4 py-4 text-[11px] sm:px-6"
+    class="border-border/60 text-muted-foreground mx-auto flex max-w-7xl items-center justify-between gap-4 border-t px-4 py-4 text-[11px] sm:px-6"
   >
     <span>{t("footer.copyright", [new Date().getFullYear()])}</span>
     <div class="flex items-center gap-2">

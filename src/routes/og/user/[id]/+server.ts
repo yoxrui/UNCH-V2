@@ -1,6 +1,7 @@
 import { fetchAccountByHandle, fetchAccountStats, coverUrl } from "$lib/data/index.js";
 import { renderOgPng, toDataUrl, ogText, ogProfileUrl, ogBannerUrl, ogEmojis, ogPlain } from "$lib/server/og/render.js";
 import { buildUserOg } from "$lib/server/og/templates.js";
+import { miku } from "$lib/server/og/assets.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ params, url }) => {
@@ -11,11 +12,10 @@ export const GET: RequestHandler = async ({ params, url }) => {
   const role = account.admin ? "Admin" : account.mod ? "Moderator" : null;
   const top = [...charts].sort((a, b) => b.like_count - a.like_count).slice(0, 3);
 
-  const [stats, avatar, banner, miku, ...jackets] = await Promise.all([
+  const [stats, avatar, banner, ...jackets] = await Promise.all([
     fetchAccountStats(fetch, account.sonolus_id),
     toDataUrl(ogProfileUrl(account.sonolus_id, account.profile_hash, url.origin)),
     toDataUrl(ogBannerUrl(account.sonolus_id, account.banner_hash, url.origin)),
-    toDataUrl(`${url.origin}/mikudayo.png`),
     ...top.map((c) => toDataUrl(coverUrl(c))),
   ]);
 

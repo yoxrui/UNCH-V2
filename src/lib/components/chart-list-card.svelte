@@ -27,10 +27,13 @@
 
 <article class="group bg-card relative isolate overflow-hidden rounded-2xl">
   {#if cover}
-    <span
-      class="absolute inset-y-0 left-0 -z-10 w-2/3 bg-cover bg-center opacity-25 blur-2xl saturate-150 [mask-image:linear-gradient(to_right,black,transparent)]"
-      style="background-image: url({cover})"
-    ></span>
+    <img
+      src={cover}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      class="absolute inset-y-0 left-0 -z-10 w-2/3 opacity-25 blur-2xl saturate-150 [mask-image:linear-gradient(to_right,black,transparent)] h-full object-cover"
+    />
   {/if}
 
   <div class="flex items-stretch gap-3 p-2.5">
@@ -83,7 +86,7 @@
   </div>
 
   <div class="relative z-10 px-2.5 pb-2.5">
-    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy />
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy={chart.preview_file_hash ? true : "play"} />
   </div>
 
   {#if expanded}

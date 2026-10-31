@@ -75,7 +75,7 @@
         style="background-color: #000020"
       >
         {#if watchVia[0]}<span>{watchVia[0]}</span>{/if}
-        <img src="https://sonolus.com/logo.png" alt="Sonolus" class="h-4 w-auto" />
+        <img src="https://sonolus.com/logo.png" alt="Sonolus" width="1775" height="360" class="h-4 w-auto" />
         {#if watchVia[1]}<span>{watchVia[1]}</span>{/if}
       </a>
     </div>

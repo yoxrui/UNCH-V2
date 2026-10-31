@@ -7,6 +7,8 @@
     src = null,
     ring,
     rounded = "rounded-xl",
+    // for the one image that's the page's main content (LCP): load right away, ahead of everything else
+    priority = false,
     class: className,
   }: {
     id?: string;
@@ -14,6 +16,7 @@
     src?: string | null;
     ring?: string;
     rounded?: string;
+    priority?: boolean;
     class?: string;
   } = $props();
 
@@ -35,7 +38,11 @@
     <img
       src={src}
       alt={title}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchpriority={priority ? "high" : "auto"}
+      decoding="async"
+      width="512"
+      height="512"
       onload={() => (loaded = true)}
       onerror={() => (failed = true)}
       class={cn(

@@ -15,10 +15,13 @@
 
 <article class="group bg-card relative isolate flex items-center gap-4 overflow-hidden rounded-2xl p-2 pr-4">
   {#if cover}
-    <span
-      class="absolute inset-y-0 left-0 -z-10 w-1/2 bg-cover bg-center opacity-25 blur-2xl saturate-150 transition-opacity duration-250 [mask-image:linear-gradient(to_right,black,transparent)] group-hover:opacity-45 motion-reduce:transition-none"
-      style="background-image: url({cover})"
-    ></span>
+    <img
+      src={cover}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      class="absolute inset-y-0 left-0 -z-10 w-1/2 opacity-25 blur-2xl saturate-150 transition-opacity duration-250 [mask-image:linear-gradient(to_right,black,transparent)] group-hover:opacity-45 motion-reduce:transition-none h-full object-cover"
+    />
   {/if}
 
   <CoverArt id={chart.id} title={chart.title} src={cover} rounded="rounded-xl" class="size-16 shrink-0" />
@@ -56,7 +59,7 @@
   </div>
 
   <div class="relative z-10 hidden w-52 shrink-0 lg:block">
-    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy />
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy={chart.preview_file_hash ? true : "play"} />
   </div>
 
   <div class="text-muted-foreground flex shrink-0 flex-col items-end gap-1.5 text-xs tabular-nums">

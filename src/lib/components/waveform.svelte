@@ -22,8 +22,8 @@
     src?: string | null;
     variant?: "full" | "compact";
     height?: number;
-    // wait until scrolled into view before downloading the audio
-    lazy?: boolean;
+    // true: download once scrolled into view. "play": download only when play is pressed.
+    lazy?: boolean | "play";
     class?: string;
   } = $props();
 
@@ -32,6 +32,7 @@
   let ready = $state(false);
   // svelte-ignore state_referenced_locally
   let visible = $state(!lazy);
+  let playWhenReady = false;
 
   type WS = import("wavesurfer.js").default;
   let ws: WS | null = null;
@@ -83,6 +84,10 @@
     ws = WaveSurfer.create(opts);
     ws.on("ready", () => {
       ready = true;
+      if (playWhenReady) {
+        playWhenReady = false;
+        ws?.play();
+      }
       if (src && ws && !peakCache.has(src)) {
         peakCache.set(src, { peaks: ws.exportPeaks(), duration: ws.getDuration() });
       }
@@ -98,11 +103,16 @@
 
   function toggle() {
     if (!src) return;
+    if (!visible) {
+      playWhenReady = true;
+      visible = true;
+      return;
+    }
     ws?.playPause();
   }
 
   $effect(() => {
-    if (visible || !container) return;
+    if (visible || !container || lazy === "play") return;
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -139,7 +149,7 @@
   <button
     type="button"
     onclick={toggle}
-    disabled={!src || !ready}
+    disabled={!src || (visible && !ready)}
     aria-label={playing ? t("preview.pause") : t("preview.play")}
     aria-pressed={playing}
     class={cn(
@@ -156,7 +166,7 @@
 
   <div class="relative min-w-0 flex-1" style={`height:${height ?? (variant === "compact" ? 36 : 72)}px`}>
     {#if !ready}
-      <div class="bg-muted absolute inset-0 animate-pulse rounded-md" aria-hidden="true"></div>
+      <div class={cn("bg-muted absolute inset-0 rounded-md", visible && "animate-pulse")} aria-hidden="true"></div>
     {/if}
     <div
       bind:this={container}
