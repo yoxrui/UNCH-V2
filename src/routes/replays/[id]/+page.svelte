@@ -17,10 +17,11 @@
     relativeTime,
   } from "$lib/data/index.js";
   import { RiArrowLeftLine } from "$lib/icons.js";
+  import { sonolusOpenUrl } from "$lib/config.js";
 
   let { data } = $props();
   const chart = $derived(data.chart);
-  const sonolusLink = $derived(`https://open.sonolus.com/untitledcharts.com/replays/${data.name}`);
+  const sonolusLink = $derived(sonolusOpenUrl(`replays/${data.name}`));
   // same split as the level page's "Open via {logo}", so translations can put the logo anywhere
   const watchVia = $derived(t("replay.watchVia").split("{1}").map((s) => s.trim()));
 </script>

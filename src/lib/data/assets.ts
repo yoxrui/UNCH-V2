@@ -1,6 +1,8 @@
 import type { Chart } from "./types.js";
 
-export const ASSET_BASE_URL = "https://cdn.untitledcharts.com";
+import { CDN_URL } from "$lib/config.js";
+
+export const ASSET_BASE_URL = CDN_URL;
 
 export const DEFAULT_AVATAR = "/defpfp.webp";
 export const DEFAULT_BANNER = "/def.webp";

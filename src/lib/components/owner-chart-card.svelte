@@ -9,6 +9,7 @@
   import { t } from "$lib/i18n.svelte.js";
   import { cn } from "$lib/utils.js";
   import { prefs } from "$lib/state/preferences.svelte.js";
+  import { SITE_URL } from "$lib/config.js";
 
   let { chart }: { chart: Chart } = $props();
 
@@ -25,7 +26,7 @@
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${viewHref}`);
+      await navigator.clipboard.writeText(`${SITE_URL}${viewHref}`);
       copied = true;
       setTimeout(() => (copied = false), 1500);
     } catch {

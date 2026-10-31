@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from "$lib/i18n.svelte.js";
   import { page } from "$app/state";
+  import { SITE_URL } from "$lib/config.js";
 
   let {
     title,
@@ -28,7 +29,7 @@
   const clean = $derived(strip(title ?? ""));
   const desc = $derived(strip(description));
   const fullTitle = $derived(!clean ? "UntitledCharts" : suffix ? `${clean} | UntitledCharts` : clean);
-  const origin = $derived(page.url.origin);
+  const origin = SITE_URL;
   const canonical = $derived(origin + page.url.pathname);
   const absImage = $derived(
     image ? (image.startsWith("http") ? image : `${origin}${image}`) : `${origin}/og`,

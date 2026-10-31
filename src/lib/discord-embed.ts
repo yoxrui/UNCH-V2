@@ -1,5 +1,6 @@
 import type { Account, Chart } from "$lib/data/index.js";
 import { coverUrl, profileUrl, difficultyFromTags, type Difficulty } from "$lib/data/index.js";
+import { sonolusOpenUrl } from "$lib/config.js";
 
 type Component = Record<string, unknown>;
 
@@ -63,7 +64,7 @@ export function levelEmbed(chart: Chart, origin: string) {
           type: 2,
           style: 5,
           label: "Open in Sonolus",
-          url: `https://open.sonolus.com/untitledcharts.com/levels/UnCh-${chart.id}`,
+          url: sonolusOpenUrl(`levels/UnCh-${chart.id}`),
         },
         { type: 2, style: 5, label: "View chart", url: page },
       ],

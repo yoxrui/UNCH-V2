@@ -50,12 +50,13 @@
     RiEditLine,
   } from "$lib/icons.js";
   import { session } from "$lib/state/session.svelte";
+  import { sonolusOpenUrl, SITE_URL } from "$lib/config.js";
 
   let { data } = $props();
   const chart = $derived(data.chart);
   const isOwner = $derived(session.isLoggedIn && session.user?.handle === chart.author_handle);
 
-  const sonolusLink = $derived(`https://open.sonolus.com/untitledcharts.com/levels/UnCh-${chart.id}`);
+  const sonolusLink = $derived(sonolusOpenUrl(`levels/UnCh-${chart.id}`));
   let copied = $state(false);
 
   async function share() {
@@ -160,7 +161,7 @@
   title={chart.title}
   description={`${chart.artists} · Lv.${chart.rating} · charted by ${chart.chart_design}`}
   image={`/og/level/UnCh-${chart.id}`}
-  discord={levelEmbed(chart, page.url.origin)}
+  discord={levelEmbed(chart, SITE_URL)}
   oembed={`/oembed?author=${encodeURIComponent(chart.chart_design.replace(/:([a-zA-Z0-9_]+):/g, "").trim())}&handle=${chart.author_handle}&title=${encodeURIComponent(chart.title.replace(/:([a-zA-Z0-9_]+):/g, "").trim())}&page=${encodeURIComponent(`/levels/UnCh-${chart.id}`)}&footer=${encodeURIComponent(levelFooter(chart.rating, chart.like_count, chart.comment_count))}`}
   activity={levelStatusId(chart.id) ? `/users/${chart.author_handle}/statuses/${levelStatusId(chart.id)}` : null}
   type="article"

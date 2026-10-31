@@ -3,6 +3,7 @@ import { satori } from "@cf-wasm/satori";
 import { Resvg } from "@cf-wasm/resvg";
 import { loadFonts } from "./fonts.js";
 import { emojis } from "$lib/data/emojis.js";
+import { CDN_URL } from "$lib/config.js";
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -78,12 +79,11 @@ export async function ogEmojis(texts: string[], origin: string): Promise<Record<
   return Object.fromEntries(entries.filter((e): e is readonly [string, string] => !!e[1]));
 }
 
-const CDN = "https://cdn.untitledcharts.com";
 
 export function ogProfileUrl(sonolusId: string, hash: string | null, origin: string): string {
-  return hash ? `${CDN}/${sonolusId}/profile/${hash}` : `${origin}/defpfp.png`;
+  return hash ? `${CDN_URL}/${sonolusId}/profile/${hash}` : `${origin}/defpfp.png`;
 }
 
 export function ogBannerUrl(sonolusId: string, hash: string | null, origin: string): string {
-  return hash ? `${CDN}/${sonolusId}/banner/${hash}` : `${origin}/def.png`;
+  return hash ? `${CDN_URL}/${sonolusId}/banner/${hash}` : `${origin}/def.png`;
 }

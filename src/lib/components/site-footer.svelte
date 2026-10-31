@@ -2,6 +2,7 @@
   import { t } from "$lib/i18n.svelte.js";
   import { RiGithubFill, RiDiscordFill } from "$lib/icons.js";
   import LanguageSelect from "$lib/components/language-select.svelte";
+  import { sonolusOpenUrl } from "$lib/config.js";
 
   const groups = [
     {
@@ -38,7 +39,7 @@
         {t("footer.tagline")}
       </p>
       <a
-        href="https://open.sonolus.com/untitledcharts.com/"
+        href={sonolusOpenUrl()}
         target="_blank"
         rel="noopener noreferrer"
         class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white! transition-all hover:opacity-90"

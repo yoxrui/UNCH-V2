@@ -8,6 +8,7 @@
   import FormattedText from "$lib/components/formatted-text.svelte";
   import Seo from "$lib/components/seo.svelte";
   import { userEmbed } from "$lib/discord-embed.js";
+  import { SITE_URL } from "$lib/config.js";
   import { userStatusId, userFooter } from "$lib/activity-id.js";
   import { page } from "$app/state";
   import { untrack } from "svelte";
@@ -88,7 +89,7 @@
   title={account.sonolus_username}
   description={`${account.sonolus_username}'s charts on UntitledCharts${account.description ? ` · ${account.description}` : ""}`}
   image={`/og/user/${account.sonolus_handle}`}
-  discord={userEmbed(account, data.stats, page.url.origin)}
+  discord={userEmbed(account, data.stats, SITE_URL)}
   oembed={`/oembed?title=${encodeURIComponent(account.sonolus_username.replace(/:([a-zA-Z0-9_]+):/g, "").trim())}&page=${encodeURIComponent(`/creators/${account.sonolus_handle}`)}&footer=${encodeURIComponent(userFooter(data.stats?.chartsPublished ?? 0, data.stats?.likesReceived ?? 0, data.stats?.commentsReceived ?? 0))}`}
   activity={userStatusId(account.sonolus_handle) ? `/users/${account.sonolus_handle}/statuses/${userStatusId(account.sonolus_handle)}` : null}
   type="profile"

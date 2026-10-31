@@ -2,6 +2,7 @@
   import { t } from "$lib/i18n.svelte.js";
   import { onMount } from "svelte";
   import { cn } from "$lib/utils.js";
+  import { SONOLUS_SERVER_URL } from "$lib/config.js";
   import { createPreviewRenderer, type PreviewRenderer } from "$lib/chart-preview/preview/gl";
   import { renderPreviewFrame } from "$lib/chart-preview/preview/engine/render";
   import { buildPreviewChart } from "$lib/chart-preview/preview/engine/chart";
@@ -28,7 +29,7 @@
     chartUrl,
     audioUrl,
     bgUrl = null,
-    server = "https://untitledcharts.com",
+    server = SONOLUS_SERVER_URL,
   }: { chartUrl: string; audioUrl: string; bgUrl?: string | null; server?: string } = $props();
 
   let stage = $state<HTMLDivElement>();

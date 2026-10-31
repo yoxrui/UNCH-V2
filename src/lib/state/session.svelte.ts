@@ -1,4 +1,5 @@
 import { API_URL, profileUrl, bannerUrl } from "$lib/data/index.js";
+import { SONOLUS_HOST } from "$lib/config.js";
 
 export type UserRole = "User" | "Mod" | "Admin";
 
@@ -12,7 +13,6 @@ export type SessionUser = {
   role: UserRole;
 };
 
-const SONOLUS_HOST = "untitledcharts.com";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SESSION_KEY = "session";
 const EXPIRY_KEY = "expiry";
