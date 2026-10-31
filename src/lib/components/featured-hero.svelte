@@ -64,7 +64,7 @@
   aria-roledescription="carousel"
   aria-label={t("hero.featuredStaffPicks")}
 >
-  <div class="bg-featured text-featured-foreground relative isolate w-full max-w-5xl overflow-hidden rounded-3xl">
+  <div class="bg-featured text-featured-foreground clip-rounded relative isolate w-full max-w-5xl overflow-hidden rounded-3xl">
     <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
       {#if heroBg}
         <img src={heroBg} alt="" class="size-full scale-110 object-cover opacity-70 blur-lg" />

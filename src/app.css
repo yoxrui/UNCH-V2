@@ -231,6 +231,12 @@ body.ambient-page {
   --accent: var(--amb-text-dark);
 }
 
+/* Safari drops border-radius clipping for children with filters (our blurred cover tints), which makes
+   rounded cards look square. Any mask makes WebKit clip properly; this one keeps everything visible. */
+.clip-rounded {
+  mask-image: radial-gradient(white, black);
+}
+
 /* Unbounded runs heavy; one step lighter than the requested weight reads right. */
 .font-heading {
   letter-spacing: -0.01em;

@@ -13,7 +13,7 @@
   const cover = $derived(coverUrl(chart));
 </script>
 
-<article class="group bg-card relative isolate flex items-center gap-4 overflow-hidden rounded-2xl p-2 pr-4">
+<article class="group bg-card clip-rounded relative isolate flex items-center gap-4 overflow-hidden rounded-2xl p-2 pr-4">
   {#if cover}
     <img
       src={cover}

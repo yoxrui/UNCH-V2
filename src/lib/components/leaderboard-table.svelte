@@ -100,7 +100,7 @@
 {/snippet}
 
 <div
-  class="bg-card relative isolate overflow-hidden rounded-3xl p-2 sm:p-3"
+  class="bg-card clip-rounded relative isolate overflow-hidden rounded-3xl p-2 sm:p-3"
   aria-label={t("leaderboard.ariaLabel", [leaderboardMeta[type].label])}
 >
   {#if bg}

@@ -13,7 +13,7 @@
   const cover = $derived(coverUrl(chart));
 </script>
 
-<article class="group bg-card @container relative isolate flex h-full flex-col gap-2.5 overflow-hidden rounded-3xl p-2">
+<article class="group bg-card @container clip-rounded relative isolate flex h-full flex-col gap-2.5 overflow-hidden rounded-3xl p-2">
   <!-- Backdrop and tint reuse the cover, which the card downloads anyway. Chart background art is
        ~2–3 MB per chart at full size, far too heavy for a card. Lazy <img> so off-screen cards load nothing. -->
   {#if cover}

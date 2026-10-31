@@ -72,8 +72,6 @@
   let pageCount = $state(1);
   let loading = $state(true);
 
-  const gridCharts = $derived(charts.slice(0, Math.floor(charts.length / 3) * 3));
-
   const filterKey = $derived(
     [
       filters.searchType,
@@ -245,7 +243,7 @@
       </div>
     {:else}
       <div class="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-4">
-        {#each gridCharts as chart (chart.id)}
+        {#each charts as chart (chart.id)}
           <div animate:flip={{ duration: 250 }} in:fade={{ duration: 180 }}>
             <ChartCard {chart} />
           </div>

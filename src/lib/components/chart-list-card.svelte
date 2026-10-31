@@ -25,7 +25,7 @@
   }
 </script>
 
-<article class="group bg-card relative isolate overflow-hidden rounded-2xl">
+<article class="group bg-card clip-rounded relative isolate overflow-hidden rounded-2xl">
   {#if cover}
     <img
       src={cover}
