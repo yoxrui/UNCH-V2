@@ -55,9 +55,10 @@ function container(accent: number, components: (Component | null)[]) {
 
 const text = (content: string): Component => ({ type: 10, content });
 const link = (label: string, url: string): Component => ({ type: 2, style: 5, label, url });
-const gallery = (url: string, description: string): Component => ({
+// a single gallery image always spans the full embed width; two share the row at half width each
+const gallery = (...images: [url: string, description: string][]): Component => ({
   type: 12,
-  items: [{ media: { url }, description }],
+  items: images.map(([url, description]) => ({ media: { url }, description })),
 });
 const thumbnailSection = (lines: Component[], url: string | null, description: string): Component[] =>
   url ? [{ type: 9, components: lines, accessory: { type: 11, media: { url }, description } }] : lines;
@@ -77,17 +78,18 @@ export function levelEmbed(chart: Chart, origin: string) {
     chart.staff_pick ? "⭐ Staff pick" : null,
   ].filter(Boolean);
 
+  const cover = media(coverUrl(chart), origin);
+  const heading = [
+    text(`**[${clean(chart.title, 70)}](${page})**`),
+    text(clean(chart.artists, 80)),
+    text(`Lv. **${chart.rating}** · charted by [${clean(chart.chart_design, 50)}](${charter})`),
+  ];
+
   return container(BLUE, [
-    background ? gallery(background, `${clean(chart.title, 60)} background`) : null,
-    ...thumbnailSection(
-      [
-        text(`**[${clean(chart.title, 70)}](${page})**`),
-        text(clean(chart.artists, 80)),
-        text(`Lv. **${chart.rating}** · charted by [${clean(chart.chart_design, 50)}](${charter})`),
-      ],
-      media(coverUrl(chart), origin),
-      "Cover",
-    ),
+    // background art and cover side by side keeps the background at half width; without background art
+    // the cover sits next to the title instead
+    background && cover ? gallery([background, "Background"], [cover, "Cover"]) : null,
+    ...(background && cover ? heading : thumbnailSection(heading, cover, "Cover")),
     description ? text(description) : null,
     { type: 14, divider: true, spacing: 1 },
     text(stats.join(" · ")),
@@ -112,7 +114,7 @@ export function userEmbed(
   const bio = oneLine(account.description, 220);
 
   return container(MIKU, [
-    account.banner_hash ? gallery(media(bannerUrl(account), origin)!, `${clean(account.sonolus_username, 60)}'s banner`) : null,
+    account.banner_hash ? gallery([media(bannerUrl(account), origin)!, `${clean(account.sonolus_username, 60)}'s banner`]) : null,
     ...thumbnailSection(
       [text(`**[${clean(account.sonolus_username, 60)}](${page})**`), text(`#${account.sonolus_handle}${role}`)],
       media(profileUrl(account), origin),
