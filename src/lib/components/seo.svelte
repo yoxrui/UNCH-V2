@@ -37,9 +37,13 @@
   const absOembed = $derived(
     oembed ? (oembed.startsWith("http") ? oembed : `${origin}${oembed}`) : undefined,
   );
-  const beta = $derived(page.url.searchParams.has("embedbeta"));
+  // Discord's crawler gets the component embed (?embedbeta forces it for testing in a browser); everyone
+  // else, X, Telegram, Facebook and the rest, reads the Open Graph / Twitter tags below.
+  // ?embedlegacy brings back the older ActivityPub-style Discord embed.
+  const legacy = $derived(page.url.searchParams.has("embedlegacy"));
+  const forDiscord = $derived(!legacy && (page.data.discord || page.url.searchParams.has("embedbeta")));
   const discordJson = $derived(
-    discord && beta ? JSON.stringify(discord).replace(/</g, "\\u003c").replace(/>/g, "\\u003e") : "",
+    discord && forDiscord ? JSON.stringify(discord).replace(/</g, "\\u003c").replace(/>/g, "\\u003e") : "",
   );
 </script>
 
@@ -56,17 +60,19 @@
   <meta property="og:image" content={absImage} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content={fullTitle} />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={fullTitle} />
   <meta name="twitter:description" content={desc} />
   <meta name="twitter:image" content={absImage} />
+  <meta name="twitter:image:alt" content={fullTitle} />
 
   <meta name="theme-color" content={themeColor} />
   {#if discordJson}
     {@html `<script id="discord:component-embed" type="application/json">${discordJson}</` + `script>`}
   {/if}
-  {#if activity && page.data.discord && !beta}
+  {#if activity && page.data.discord && (legacy || !discord)}
     <link href={`${origin}${activity}`} rel="alternate" type="application/activity+json" />
   {/if}
   {#if absOembed}

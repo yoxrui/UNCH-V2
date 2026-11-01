@@ -59,7 +59,7 @@
   </div>
 
   <div class="relative z-10 hidden w-52 shrink-0 lg:block">
-    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy={chart.preview_file_hash ? true : "play"} />
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy />
   </div>
 
   <div class="text-muted-foreground flex shrink-0 flex-col items-end gap-1.5 text-xs tabular-nums">

@@ -9,12 +9,14 @@ export const load: PageLoad = async ({ params, fetch }) => {
   return {
     account: result.account,
     stats: await fetchAccountStats(fetch, result.account.sonolus_id),
-    charts: fetchCharts(fetch, {
+    // first page of "Newest"; the page fetches other sorts and pages itself
+    firstPage: fetchCharts(fetch, {
       type: "advanced",
       sonolus_handle_is: String(result.account.sonolus_handle),
       sort_by: "created_at",
       sort_order: "desc",
-      limit: 50,
-    }).then((r) => r.data),
+      page: 0,
+      limit: 12,
+    }),
   };
 };

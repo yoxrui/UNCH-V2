@@ -17,6 +17,7 @@
   import { cn } from "$lib/utils.js";
   import { ambientFrom, ambientStyle, tintPage, type Ambient } from "$lib/ambient.js";
   import {
+    fetchCharts,
     compact,
     profileUrl,
     bannerUrl,
@@ -64,19 +65,37 @@
     rememberPage(`user:${account.sonolus_handle}:charts`, chartPage);
   });
 
-  function pageSlice(charts: Chart[]) {
-    const last = Math.max(1, Math.ceil(charts.length / PER_PAGE));
-    const current = Math.min(chartPage, last);
-    return sorted(charts, sort).slice((current - 1) * PER_PAGE, current * PER_PAGE);
-  }
+  // sorting happens on the API so every sort covers all of the charter's charts, not just one page
+  const SORT_BY: Record<SortKey, string> = { new: "created_at", liked: "likes", level: "rating" };
+  let charts = $state<Chart[]>([]);
+  let pageCount = $state(1);
+  let chartsLoading = $state(true);
+  let chartsRequest = 0;
 
-  function sorted(charts: Chart[], key: SortKey) {
-    const list = [...charts];
-    if (key === "liked") list.sort((a, b) => b.like_count - a.like_count);
-    else if (key === "level") list.sort((a, b) => b.rating - a.rating);
-    else list.sort((a, b) => b.created_at.localeCompare(a.created_at));
-    return list;
-  }
+  $effect(() => {
+    const handle = account.sonolus_handle;
+    const sortBy = SORT_BY[sort];
+    const pageIndex = chartPage - 1;
+    const mine = ++chartsRequest;
+    chartsLoading = true;
+    const request =
+      sort === "new" && pageIndex === 0
+        ? data.firstPage
+        : fetchCharts(fetch, {
+            type: "advanced",
+            sonolus_handle_is: String(handle),
+            sort_by: sortBy,
+            sort_order: "desc",
+            page: pageIndex,
+            limit: PER_PAGE,
+          });
+    request.then((result) => {
+      if (mine !== chartsRequest) return;
+      charts = result.data;
+      pageCount = result.pageCount;
+      chartsLoading = false;
+    });
+  });
 
 
   let copied = $state(false);
@@ -253,27 +272,27 @@
         </div>
       </div>
 
-      {#await data.charts}
+      {#if chartsLoading && !charts.length}
         <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
-          {#each Array(4) as _, i (i)}
+          {#each Array(6) as _, i (i)}
             <ChartSkeleton />
           {/each}
         </div>
-      {:then charts}
+      {:else}
         {#if charts.length}
-          <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
-            {#each pageSlice(charts) as chart (chart.id)}
+          <div class={cn("grid grid-cols-2 gap-3 transition-opacity sm:gap-4 md:grid-cols-3", chartsLoading && "opacity-60")}>
+            {#each charts as chart (chart.id)}
               <ChartCard {chart} />
             {/each}
           </div>
-          <Pager count={charts.length} perPage={PER_PAGE} bind:page={chartPage} />
+          <Pager count={pageCount * PER_PAGE} perPage={PER_PAGE} bind:page={chartPage} />
         {:else}
           <div class="bg-muted/30 flex flex-col items-center gap-1.5 rounded-2xl px-4 py-10 text-center">
             <img src="/miku-sitting.png" alt="" aria-hidden="true" class="mb-2 block w-24" />
             <p class="text-sm font-medium">{t("userProfile.noPublicCharts")}</p>
           </div>
         {/if}
-      {/await}
+      {/if}
     </section>
   </div>
 </main>

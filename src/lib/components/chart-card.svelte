@@ -68,7 +68,7 @@
       >{chart.chart_design}</a
     >
 
-    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy={chart.preview_file_hash ? true : "play"} class="relative z-10 mt-2" />
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy class="relative z-10 mt-2" />
 
     <div class="min-h-2 flex-1"></div>
     <div

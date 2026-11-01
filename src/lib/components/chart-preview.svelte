@@ -2,6 +2,7 @@
   import { t } from "$lib/i18n.svelte.js";
   import { onMount } from "svelte";
   import { cn } from "$lib/utils.js";
+  import Sheet from "./sheet.svelte";
   import { SONOLUS_SERVER_URL } from "$lib/config.js";
   import { createPreviewRenderer, type PreviewRenderer } from "$lib/chart-preview/preview/gl";
   import { renderPreviewFrame } from "$lib/chart-preview/preview/engine/render";
@@ -48,6 +49,13 @@
   let cursorTime = $state(0);
   let audioDuration = $state(0);
   let isFullscreen = $state(false);
+  // fallback "fullscreen" for browsers that can't fullscreen a div (iPhone Safari)
+  let pseudoFullscreen = $state(false);
+  let portrait = $state(false);
+  const fullscreen = $derived(isFullscreen || pseudoFullscreen);
+  // a phone-sized inline player is too short for the settings panel, so it opens as a bottom sheet instead
+  let stageHeight = $state(0);
+  const settingsInSheet = $derived(!fullscreen && stageHeight > 0 && stageHeight < 320);
   let settingsOpen = $state(false);
 
   const DEFAULTS = {
@@ -120,6 +128,17 @@
       audio.volume = musicVolume;
       audio.muted = muted;
     }
+  });
+
+  // the page underneath shouldn't scroll while the fallback fullscreen covers it
+  $effect(() => {
+    if (!pseudoFullscreen) return;
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = previous;
+    };
   });
 
   $effect(() => {
@@ -216,14 +235,23 @@
     });
     if (container) ro.observe(container);
 
-    const onFs = () => (isFullscreen = document.fullscreenElement === stage);
+    const onFs = () => {
+      isFullscreen = document.fullscreenElement === stage;
+      if (!isFullscreen) orientation()?.unlock?.();
+    };
     document.addEventListener("fullscreenchange", onFs);
+
+    const portraitQuery = matchMedia("(orientation: portrait)");
+    const onOrientation = () => (portrait = portraitQuery.matches);
+    onOrientation();
+    portraitQuery.addEventListener("change", onOrientation);
 
     void init();
     raf = requestAnimationFrame(frame);
     return () => {
       ro.disconnect();
       document.removeEventListener("fullscreenchange", onFs);
+      portraitQuery.removeEventListener("change", onOrientation);
       cancelAnimationFrame(raf);
       renderer?.dispose();
     };
@@ -262,14 +290,48 @@
     showEffects = DEFAULTS.showEffects;
     musicVolume = DEFAULTS.musicVolume;
   }
-  function toggleFullscreen() {
+  type LockableOrientation = ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void };
+  const orientation = () => (typeof screen === "undefined" ? undefined : (screen.orientation as LockableOrientation | undefined));
+
+  async function enterFullscreen() {
     if (!stage) return;
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void stage.requestFullscreen();
+    const request =
+      stage.requestFullscreen ?? (stage as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen;
+    if (request) {
+      try {
+        await request.call(stage);
+        // phones: play the chart sideways while fullscreen. Android honours this; iOS ignores it.
+        await orientation()?.lock?.("landscape").catch(() => {});
+        return;
+      } catch {
+        // fall through to the fallback below
+      }
+    }
+    // iPhone Safari can only fullscreen <video>, so fill the viewport ourselves (rotated if held upright)
+    pseudoFullscreen = true;
   }
+
+  function exitFullscreen() {
+    if (pseudoFullscreen) {
+      pseudoFullscreen = false;
+      return;
+    }
+    orientation()?.unlock?.();
+    if (document.fullscreenElement) void document.exitFullscreen();
+  }
+
+  function toggleFullscreen() {
+    if (isFullscreen || pseudoFullscreen) exitFullscreen();
+    else void enterFullscreen();
+  }
+
   function onKey(e: KeyboardEvent) {
     if (e.key === "Escape" && settingsOpen) {
       settingsOpen = false;
+      return;
+    }
+    if (e.key === "Escape" && pseudoFullscreen) {
+      pseudoFullscreen = false;
       return;
     }
     if (e.key === " " || e.key === "k") {
@@ -295,103 +357,93 @@
   onloadedmetadata={() => (audioDuration = audio?.duration ?? 0)}
 ></audio>
 
-{#snippet settingsBody(dark: boolean)}
-    <div class="flex items-center justify-between">
-      <h3 class="font-heading text-sm font-semibold">{t("settings.title")}</h3>
-      <button type="button" onclick={resetSettings} class={cn("text-xs", dark ? "text-white/60 hover:text-white" : "text-muted-foreground hover:text-foreground")}>
-        {t("settings.reset")}
+{#snippet settingsBody()}
+  <div class="flex items-center justify-between pb-1">
+    <h3 class="font-heading text-sm font-semibold">{t("preview.previewSettings")}</h3>
+    <button type="button" onclick={resetSettings} class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-white/60 hover:bg-white/10 hover:text-white">
+      <RiRestartLine class="size-3.5" />
+      {t("settings.reset")}
+    </button>
+  </div>
+
+  <div class="space-y-2 border-t border-white/10 pt-3">
+    <div class="flex items-baseline justify-between">
+      <span class="text-sm">{t("preview.scrollSpeed")}</span>
+      <span class="font-heading text-sm font-semibold tabular-nums">{noteSpeed.toFixed(1)}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick={() => nudgeSpeed(-0.5)} aria-label={t("preview.slower")} class="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20">
+        <RiSubtractLine class="size-3.5" />
+      </button>
+      <input type="range" min="1" max="12" step="0.5" bind:value={noteSpeed} aria-label={t("preview.scrollSpeed")} class="range range-primary range-xs min-w-0 flex-1" />
+      <button type="button" onclick={() => nudgeSpeed(0.5)} aria-label={t("preview.faster")} class="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20">
+        <RiAddLine class="size-3.5" />
       </button>
     </div>
+  </div>
 
-    <div class="space-y-2">
-      <div class="flex items-center justify-between">
-        <span class="text-sm">{t("preview.scrollSpeed")}</span>
-        <div class={cn("flex items-center rounded-lg", dark ? "bg-white/10" : "bg-background border")}>
-          <button
-            type="button"
-            onclick={() => nudgeSpeed(-0.5)}
-            aria-label={t("preview.slower")}
-            class={cn("grid size-7 place-items-center", dark ? "text-white/70 hover:text-white" : "text-muted-foreground hover:text-foreground")}
-          >
-            <RiSubtractLine class="block size-3.5" />
-          </button>
-          <span class="w-9 text-center text-sm font-semibold tabular-nums">{noteSpeed.toFixed(1)}</span>
-          <button
-            type="button"
-            onclick={() => nudgeSpeed(0.5)}
-            aria-label={t("preview.faster")}
-            class={cn("grid size-7 place-items-center", dark ? "text-white/70 hover:text-white" : "text-muted-foreground hover:text-foreground")}
-          >
-            <RiAddLine class="block size-3.5" />
-          </button>
-        </div>
-      </div>
-      <input
-        type="range"
-        min="1"
-        max="12"
-        step="0.5"
-        bind:value={noteSpeed}
-        aria-label={t("preview.scrollSpeed")}
-        class="range range-primary range-xs w-full"
-      />
+  <div class="space-y-2 border-t border-white/10 pt-3">
+    <span class="text-sm">{t("preview.quality")}</span>
+    <div class="grid grid-cols-4 gap-1 rounded-full bg-white/10 p-1" role="radiogroup" aria-label={t("preview.quality")}>
+      {#each QUALITY as q (q.value)}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={quality === q.value}
+          onclick={() => (quality = q.value)}
+          class={cn(
+            "rounded-full py-1 text-xs font-medium transition-colors",
+            quality === q.value ? "bg-white text-slate-900" : "text-white/70 hover:text-white",
+          )}
+        >
+          {q.label}
+        </button>
+      {/each}
     </div>
+  </div>
 
-    <div class="space-y-2">
-      <span class="text-sm">{t("preview.quality")}</span>
-      <div class={cn("grid grid-cols-4 gap-1 rounded-xl p-1", dark ? "bg-white/10" : "bg-muted")} role="radiogroup" aria-label={t("preview.quality")}>
-        {#each QUALITY as q (q.value)}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={quality === q.value}
-            onclick={() => (quality = q.value)}
-            class={cn(
-              "rounded-lg py-1 text-xs font-medium transition-colors",
-              quality === q.value
-                  ? dark ? "bg-white text-slate-900" : "bg-background text-foreground shadow-sm"
-                  : dark ? "text-white/70 hover:text-white" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {q.label}
-          </button>
-        {/each}
-      </div>
+  <label class="flex cursor-pointer items-center justify-between gap-3 border-t border-white/10 pt-3">
+    <span class="text-sm">{t("preview.hitEffects")}</span>
+    <input type="checkbox" bind:checked={showEffects} class="toggle toggle-primary toggle-sm" />
+  </label>
+
+  <div class="space-y-2 border-t border-white/10 pt-3">
+    <div class="flex items-baseline justify-between">
+      <span class="text-sm">{t("preview.music")}</span>
+      <span class="text-xs text-white/60 tabular-nums">{muted ? t("preview.mute") : `${Math.round(musicVolume * 100)}%`}</span>
     </div>
-
-    <label class="flex cursor-pointer items-center justify-between gap-3">
-      <span class="text-sm">{t("preview.hitEffects")}</span>
-      <input type="checkbox" bind:checked={showEffects} class="toggle toggle-primary toggle-sm" />
-    </label>
-
-    <div class="space-y-2">
-      <div class="flex items-center justify-between">
-        <span class="text-sm">{t("preview.music")}</span>
-        <span class={cn("text-xs tabular-nums", dark ? "text-white/60" : "text-muted-foreground")}>{Math.round(musicVolume * 100)}%</span>
-      </div>
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.05"
-        bind:value={musicVolume}
-        aria-label={t("preview.musicVolume")}
-        class="range range-primary range-xs w-full"
-      />
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        onclick={() => (muted = !muted)}
+        aria-label={muted ? t("preview.unmute") : t("preview.mute")}
+        aria-pressed={muted}
+        class="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20"
+      >
+        {#if muted}<RiVolumeMuteLine class="size-3.5" />{:else}<RiVolumeUpLine class="size-3.5" />{/if}
+      </button>
+      <input type="range" min="0" max="1" step="0.05" bind:value={musicVolume} aria-label={t("preview.musicVolume")} class="range range-primary range-xs min-w-0 flex-1" />
     </div>
+  </div>
 {/snippet}
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 <div
   bind:this={stage}
+  bind:clientHeight={stageHeight}
   tabindex="0"
   role="region"
   aria-label={t("preview.chartPreview")}
   onkeydown={onKey}
   class={cn(
-    "focus-visible:ring-ring/60 relative aspect-video w-full overflow-hidden border bg-slate-950 outline-none focus-visible:ring-2",
-    isFullscreen ? "rounded-none border-0" : "rounded-3xl",
+    "focus-visible:ring-ring/60 overflow-hidden bg-slate-950 outline-none focus-visible:ring-2",
+    fullscreen ? "rounded-none border-0" : "relative aspect-video w-full rounded-3xl border",
+    pseudoFullscreen && "fixed z-[100]",
+    pseudoFullscreen && !portrait && "inset-0",
   )}
+  style={pseudoFullscreen && portrait
+    ? "top: 0; left: 100vw; width: 100dvh; height: 100vw; transform: rotate(90deg); transform-origin: top left;"
+    : undefined}
 >
   {#if bgUrl}
     <div class="absolute inset-0 bg-cover bg-center" style={`background-image:url(${bgUrl})`}></div>
@@ -429,7 +481,7 @@
       </button>
     </div>
   {:else}
-    {#if !playing && !settingsOpen}
+    {#if !playing && !(settingsOpen && !settingsInSheet)}
       <button
         type="button"
         onclick={toggle}
@@ -442,7 +494,7 @@
       </button>
     {/if}
 
-    {#if settingsOpen}
+    {#if settingsOpen && !settingsInSheet}
       <button
         type="button"
         aria-label={t("preview.closeSettings")}
@@ -452,9 +504,9 @@
       <div
         role="dialog"
         aria-label={t("preview.previewSettings")}
-        class="absolute right-3 bottom-16 z-20 w-64 max-w-[calc(100%-1.5rem)] space-y-4 rounded-2xl bg-slate-900/95 p-4 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur"
+        class="absolute right-2 bottom-14 z-20 max-h-[calc(100%-4.5rem)] w-72 max-w-[calc(100%-1rem)] space-y-3 overflow-y-auto overscroll-contain rounded-2xl bg-slate-900/95 p-4 text-white shadow-2xl ring-1 ring-white/10"
       >
-        {@render settingsBody(true)}
+        {@render settingsBody()}
       </div>
     {/if}
 
@@ -519,10 +571,10 @@
       <button
         type="button"
         onclick={toggleFullscreen}
-        aria-label={isFullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
+        aria-label={fullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
         class="grid size-9 shrink-0 place-items-center rounded-full hover:bg-white/15"
       >
-        {#if isFullscreen}
+        {#if fullscreen}
           <RiFullscreenExitLine class="block size-4.5" />
         {:else}
           <RiFullscreenLine class="block size-4.5" />
@@ -531,3 +583,11 @@
     </div>
   {/if}
 </div>
+
+{#if settingsInSheet}
+  <Sheet bind:open={settingsOpen}>
+    <div class="m-3 space-y-3 rounded-2xl bg-slate-900 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-white">
+      {@render settingsBody()}
+    </div>
+  </Sheet>
+{/if}

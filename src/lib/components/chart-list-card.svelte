@@ -86,7 +86,7 @@
   </div>
 
   <div class="relative z-10 px-2.5 pb-2.5">
-    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy={chart.preview_file_hash ? true : "play"} />
+    <Waveform id={chart.id} src={previewProxyUrl(chart)} variant="compact" height={26} lazy />
   </div>
 
   {#if expanded}

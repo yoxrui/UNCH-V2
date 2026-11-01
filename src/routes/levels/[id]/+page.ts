@@ -17,7 +17,14 @@ export const load: PageLoad = async ({ params, fetch }) => {
   return {
     chart,
     author: fetchAccountById(fetch, chart.author),
-    related: fetchCharts(fetch, { type: "quick", sort_by: "decaying_likes", limit: 9 }).then((r) =>
+    // the charter's other charts, most liked first; there's no real "related" signal in the API
+    moreFromCharter: fetchCharts(fetch, {
+      type: "advanced",
+      sonolus_handle_is: String(chart.author_handle),
+      sort_by: "likes",
+      sort_order: "desc",
+      limit: 10,
+    }).then((r) =>
       r.data.filter((c) => c.id !== chart.id).slice(0, 8),
     ),
     trends,

@@ -20,11 +20,17 @@ export function bgmUrl(chart: Chart): string | null {
   return assetUrl(chart.author, chart.id, chart.music_file_hash);
 }
 
-// Short preview clip if the charter uploaded one, otherwise the full song. Goes through the
-// proxy because the waveform has to decode it, and the CDN doesn't send CORS headers.
+// About the first 15 seconds of a typical MP3; used when a chart has no preview clip of its own.
+const SONG_PREVIEW_BYTES = 300_000;
+
+// The charter's preview clip if there is one, otherwise just the start of the song, so every card can
+// draw a real waveform without downloading whole songs. Goes through the proxy because the waveform has
+// to decode the audio, and the CDN doesn't send CORS headers.
 export function previewProxyUrl(chart: Chart): string | null {
-  const url = assetUrl(chart.author, chart.id, chart.preview_file_hash) ?? bgmUrl(chart);
-  return url ? `/api/audio-proxy?url=${encodeURIComponent(url)}` : null;
+  const clip = assetUrl(chart.author, chart.id, chart.preview_file_hash);
+  if (clip) return `/api/audio-proxy?url=${encodeURIComponent(clip)}`;
+  const song = bgmUrl(chart);
+  return song ? `/api/audio-proxy?url=${encodeURIComponent(song)}&bytes=${SONG_PREVIEW_BYTES}` : null;
 }
 
 export function chartFileUrl(chart: Chart): string | null {

@@ -26,6 +26,7 @@
     fetchComments,
     compact,
     relativeTime,
+    parseDescriptionMeta,
     LEADERBOARD_TYPES,
     leaderboardMeta,
     coverUrl,
@@ -45,7 +46,6 @@
     RiHeart3Fill,
     RiChat3Line,
     RiStarFill,
-    RiMusic2Line,
     RiTrophyLine,
     RiShareLine,
     RiEditLine,
@@ -55,6 +55,8 @@
 
   let { data } = $props();
   const chart = $derived(data.chart);
+  const songBpm = $derived(parseDescriptionMeta(chart.description).bpm);
+  const charterName = $derived(chart.chart_design.replace(/:[a-zA-Z0-9_]+:/g, "").trim());
 
   // tint the page with the cover's main colour
   let ambient = $state<Ambient | null>(null);
@@ -296,10 +298,10 @@
 
       <div class="mt-5 grid gap-3">
         <div class="bg-muted/40 flex items-center gap-3 rounded-2xl border px-3 py-2">
-          <span class="text-muted-foreground inline-flex shrink-0 items-center gap-1.5 text-xs font-medium">
-            <RiMusic2Line class="block size-4" /> {t("levelDetail.song")}
-          </span>
-          <Waveform id={chart.id} src={bgmProxyUrl(chart)} variant="compact" class="min-w-0 flex-1" />
+          <Waveform id={chart.id} src={bgmProxyUrl(chart)} variant="compact" height={36} class="min-w-0 flex-1" />
+          {#if songBpm}
+            <span class="text-muted-foreground shrink-0 text-xs font-semibold tabular-nums">{t("common.bpm", [songBpm])}</span>
+          {/if}
         </div>
 
         <dl class="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-2xl border sm:grid-cols-4">
@@ -472,9 +474,9 @@
       {/if}
     </section>
 
-  {#await data.related}
+  {#await data.moreFromCharter}
     <section class="space-y-5">
-      <h2 class="font-heading text-lg font-semibold tracking-tight">{t("levelDetail.related")}</h2>
+      <h2 class="font-heading text-lg font-semibold tracking-tight">{t("levelDetail.moreFrom", [charterName])}</h2>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
         {#each Array(4) as _, i (i)}
           <div class={i >= 3 ? "hidden lg:block" : i >= 2 ? "hidden sm:block" : ""}>
@@ -483,9 +485,15 @@
         {/each}
       </div>
     </section>
-  {:then related}
-    {#if related.length}
-      <ChartSection title={t("levelDetail.related")} charts={related} carousel />
+  {:then moreFromCharter}
+    {#if moreFromCharter.length}
+      <ChartSection
+        title={t("levelDetail.moreFrom", [charterName])}
+        charts={moreFromCharter}
+        href={`/creators/${chart.author_handle}`}
+        hrefLabel={t("levelDetail.viewProfile")}
+        carousel
+      />
     {/if}
   {/await}
 </main>
