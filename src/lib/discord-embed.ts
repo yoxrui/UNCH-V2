@@ -44,8 +44,9 @@ function media(url: string | null, origin: string): string | null {
   return `${origin}/cdn/${path}${path.endsWith("_webp") ? ".webp" : ".png"}`;
 }
 
+// numbers in bold so they stand out in the stats lines
 function plural(n: number, one: string, many: string) {
-  return `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+  return `**${n.toLocaleString("en-US")}** ${n === 1 ? one : many}`;
 }
 
 function container(accent: number, components: (Component | null)[]) {
@@ -72,7 +73,7 @@ export function levelEmbed(chart: Chart, origin: string) {
   const stats = [
     `❤️ ${plural(chart.like_count, "like", "likes")}`,
     `💬 ${plural(chart.comment_count, "comment", "comments")}`,
-    bpm ? `${bpm} BPM` : null,
+    bpm ? `**${bpm}** BPM` : null,
     chart.staff_pick ? "⭐ Staff pick" : null,
   ].filter(Boolean);
 
@@ -82,7 +83,7 @@ export function levelEmbed(chart: Chart, origin: string) {
       [
         text(`**[${clean(chart.title, 70)}](${page})**`),
         text(clean(chart.artists, 80)),
-        text(`Lv. ${chart.rating} · charted by [${clean(chart.chart_design, 50)}](${charter})`),
+        text(`Lv. **${chart.rating}** · charted by [${clean(chart.chart_design, 50)}](${charter})`),
       ],
       media(coverUrl(chart), origin),
       "Cover",
@@ -94,8 +95,8 @@ export function levelEmbed(chart: Chart, origin: string) {
       type: 1,
       components: [
         link("Open in Sonolus", sonolusOpenUrl(`levels/UnCh-${chart.id}`)),
-        link("View chart", page),
-        link("Charter's profile", charter),
+        link("View Chart", page),
+        link("View Charter Profile", charter),
       ],
     },
   ]);
@@ -126,8 +127,8 @@ export function userEmbed(
     {
       type: 1,
       components: [
-        link("View profile", page),
-        link("Their charts", `${origin}/browse?sonolus_handle_is=${account.sonolus_handle}`),
+        link("View Profile", page),
+        link("View Charts", `${origin}/browse?sonolus_handle_is=${account.sonolus_handle}`),
       ],
     },
   ]);
