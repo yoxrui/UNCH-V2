@@ -1,5 +1,5 @@
 import type { Account, Chart } from "$lib/data/index.js";
-import { assetUrl, coverUrl, profileUrl, bannerUrl, parseDescriptionMeta } from "$lib/data/index.js";
+import { coverUrl, profileUrl, bannerUrl, parseDescriptionMeta } from "$lib/data/index.js";
 import { CDN_URL, sonolusOpenUrl } from "$lib/config.js";
 
 // Discord component embeds: https://docs.discord.com/developers/link-previews/component-embeds
@@ -66,8 +66,6 @@ const thumbnailSection = (lines: Component[], url: string | null, description: s
 export function levelEmbed(chart: Chart, origin: string) {
   const page = `${origin}/levels/UnCh-${chart.id}`;
   const charter = `${origin}/creators/${chart.author_handle}`;
-  // only genuine background art goes on top (backgroundUrl() would fall back to the cover)
-  const background = media(assetUrl(chart.author, chart.id, chart.background_file_hash), origin);
   const bpm = parseDescriptionMeta(chart.description).bpm;
   const description = oneLine(chart.description, 200);
 
@@ -86,10 +84,7 @@ export function levelEmbed(chart: Chart, origin: string) {
   ];
 
   return container(BLUE, [
-    // background art and cover side by side keeps the background at half width; without background art
-    // the cover sits next to the title instead
-    background && cover ? gallery([background, "Background"], [cover, "Cover"]) : null,
-    ...(background && cover ? heading : thumbnailSection(heading, cover, "Cover")),
+    ...thumbnailSection(heading, cover, "Cover"),
     description ? text(description) : null,
     { type: 14, divider: true, spacing: 1 },
     text(stats.join(" · ")),
