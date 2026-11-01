@@ -370,6 +370,9 @@
     "siteDescription": "Browse, rank, and discover Sonolus rhythm-game fan-charts from the community.",
     "hidePreview": "Hide preview",
     "previewAudio": "Preview audio",
+    "insertEmoji": "Insert emoji",
+    "searchEmoji": "Search emoji",
+    "noEmoji": "No emoji found",
     "showLess": "Show less",
     "showMoreDetails": "Show more details"
   },

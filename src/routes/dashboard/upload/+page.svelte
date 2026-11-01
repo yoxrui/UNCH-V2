@@ -154,15 +154,15 @@
       <div class="clear-both grid gap-4 sm:grid-cols-2">
         <label class="space-y-1.5">
           <span class="text-sm font-medium">{t("edit.title")}</span>
-          <input type="text" bind:value={title} required class={inputClass} placeholder={t("upload.chartTitle")} />
+          <EmojiTextarea multiline={false} bind:value={title} required class={inputClass} placeholder={t("upload.chartTitle")} />
         </label>
         <label class="space-y-1.5">
           <span class="text-sm font-medium">{t("edit.artists")}</span>
-          <input type="text" bind:value={artists} required class={inputClass} placeholder={t("upload.songArtistS")} />
+          <EmojiTextarea multiline={false} bind:value={artists} required class={inputClass} placeholder={t("upload.songArtistS")} />
         </label>
         <label class="space-y-1.5">
           <span class="text-sm font-medium">{t("edit.charter")}</span>
-          <input type="text" bind:value={author} required class={inputClass} placeholder={t("upload.chartDesignerName")} />
+          <EmojiTextarea multiline={false} bind:value={author} required class={inputClass} placeholder={t("upload.chartDesignerName")} />
         </label>
         <label class="space-y-1.5">
           <span class="text-sm font-medium">{t("search.rating")}</span>

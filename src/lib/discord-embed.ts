@@ -5,6 +5,8 @@ import { CDN_URL, sonolusOpenUrl } from "$lib/config.js";
 // Discord component embeds: https://docs.discord.com/developers/link-previews/component-embeds
 // Limits worth knowing: one top-level container, at most 40 components, 3,000 bytes of JSON, link buttons
 // only (style 5). Built from the chart's own artwork rather than a rendered OG image.
+// Discord flattens line breaks inside a link preview's text block, which also breaks line-start markdown
+// (# headings, -# subtext). So every line gets its own text block, and emphasis is bold, not headings.
 
 type Component = Record<string, unknown>;
 
@@ -18,6 +20,15 @@ function clean(value: string | null | undefined, max = 300): string {
     .replace(/\s+\n/g, "\n")
     .trim();
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+// descriptions are often written one fact per line; joined with dots they still read once flattened
+function oneLine(value: string | null | undefined, max: number): string {
+  const lines = (value ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return clean(lines.join(" · "), max);
 }
 
 function absolute(url: string, origin: string) {
@@ -47,23 +58,16 @@ const gallery = (url: string, description: string): Component => ({
   type: 12,
   items: [{ media: { url }, description }],
 });
+const thumbnailSection = (lines: Component[], url: string | null, description: string): Component[] =>
+  url ? [{ type: 9, components: lines, accessory: { type: 11, media: { url }, description } }] : lines;
 
 export function levelEmbed(chart: Chart, origin: string) {
   const page = `${origin}/levels/UnCh-${chart.id}`;
   const charter = `${origin}/creators/${chart.author_handle}`;
-  const cover = media(coverUrl(chart), origin);
   // only genuine background art goes on top (backgroundUrl() would fall back to the cover)
   const background = media(assetUrl(chart.author, chart.id, chart.background_file_hash), origin);
   const bpm = parseDescriptionMeta(chart.description).bpm;
-  const description = clean(chart.description, 200);
-
-  const heading = text(
-    [
-      `## [${clean(chart.title, 70)}](${page})`,
-      clean(chart.artists, 80),
-      `-# Lv. ${chart.rating} · charted by [${clean(chart.chart_design, 50)}](${charter})`,
-    ].join("\n"),
-  );
+  const description = oneLine(chart.description, 200);
 
   const stats = [
     `❤️ ${plural(chart.like_count, "like", "likes")}`,
@@ -74,10 +78,18 @@ export function levelEmbed(chart: Chart, origin: string) {
 
   return container(BLUE, [
     background ? gallery(background, `${clean(chart.title, 60)} background`) : null,
-    cover ? { type: 9, components: [heading], accessory: { type: 11, media: { url: cover }, description: "Cover" } } : heading,
+    ...thumbnailSection(
+      [
+        text(`**[${clean(chart.title, 70)}](${page})**`),
+        text(clean(chart.artists, 80)),
+        text(`Lv. ${chart.rating} · charted by [${clean(chart.chart_design, 50)}](${charter})`),
+      ],
+      media(coverUrl(chart), origin),
+      "Cover",
+    ),
     description ? text(description) : null,
     { type: 14, divider: true, spacing: 1 },
-    text(`-# ${stats.join(" · ")}`),
+    text(stats.join(" · ")),
     {
       type: 1,
       components: [
@@ -96,23 +108,19 @@ export function userEmbed(
 ) {
   const page = `${origin}/creators/${account.sonolus_handle}`;
   const role = account.admin ? " · Admin" : account.mod ? " · Moderator" : "";
-  const bio = clean(account.description, 220);
-
-  const heading = text(
-    [`## [${clean(account.sonolus_username, 60)}](${page})`, `-# #${account.sonolus_handle}${role}`].join("\n"),
-  );
+  const bio = oneLine(account.description, 220);
 
   return container(MIKU, [
     account.banner_hash ? gallery(media(bannerUrl(account), origin)!, `${clean(account.sonolus_username, 60)}'s banner`) : null,
-    {
-      type: 9,
-      components: [heading],
-      accessory: { type: 11, media: { url: media(profileUrl(account), origin) }, description: "Avatar" },
-    },
+    ...thumbnailSection(
+      [text(`**[${clean(account.sonolus_username, 60)}](${page})**`), text(`#${account.sonolus_handle}${role}`)],
+      media(profileUrl(account), origin),
+      "Avatar",
+    ),
     bio ? text(bio) : null,
     stats
       ? text(
-          `-# 🎵 ${plural(stats.chartsPublished, "chart", "charts")} · ❤️ ${plural(stats.likesReceived, "like", "likes")} · 💬 ${plural(stats.commentsReceived, "comment", "comments")}`,
+          `🎵 ${plural(stats.chartsPublished, "chart", "charts")} · ❤️ ${plural(stats.likesReceived, "like", "likes")} · 💬 ${plural(stats.commentsReceived, "comment", "comments")}`,
         )
       : null,
     {

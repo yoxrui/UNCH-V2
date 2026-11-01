@@ -22,6 +22,7 @@ export { default as RiEditLine } from "remixicon-icon/edit-line.svelte";
 export { default as RiImageEditLine } from "remixicon-icon/image-edit-line.svelte";
 export { default as RiImageAddLine } from "remixicon-icon/image-add-line.svelte";
 export { default as RiEmotionSadLine } from "remixicon-icon/emotion-sad-line.svelte";
+export { default as RiEmotionLine } from "remixicon-icon/emotion-line.svelte";
 export { default as RiEqualizerLine } from "remixicon-icon/equalizer-line.svelte";
 export { default as RiExternalLinkLine } from "remixicon-icon/external-link-line.svelte";
 export { default as RiLinksLine } from "remixicon-icon/links-line.svelte";
