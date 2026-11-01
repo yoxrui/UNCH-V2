@@ -73,7 +73,7 @@ export function levelEmbed(chart: Chart, origin: string) {
     `❤️ ${plural(chart.like_count, "like", "likes")}`,
     `💬 ${plural(chart.comment_count, "comment", "comments")}`,
     bpm ? `**${bpm}** BPM` : null,
-    chart.staff_pick ? "⭐ Staff pick" : null,
+    chart.staff_pick ? "✨ **Staff Pick**" : null,
   ].filter(Boolean);
 
   const cover = media(coverUrl(chart), origin);
